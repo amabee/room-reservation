@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { AppSidebar } from "./_components/AppSideBar";
+import { Toaster } from "sonner";
 
 export default function AdminLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -45,6 +46,8 @@ export default function AdminLayout({ children }) {
           )}
         >
           <div className="max-w-7xl mx-auto">{children}</div>
+          <Toaster 
+          richColors={true} />
         </main>
       </div>
     </div>
