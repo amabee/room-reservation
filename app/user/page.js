@@ -1,69 +1,91 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Clock, Users, Home, Check, X, Menu, ChevronLeft, ChevronRight, Star, Coffee, Wifi, Monitor, MapPin } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Calendar,
+  Clock,
+  Users,
+  Home,
+  Check,
+  X,
+  Menu,
+  ChevronLeft,
+  ChevronRight,
+  Star,
+  Coffee,
+  Wifi,
+  Monitor,
+  MapPin,
+} from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 
-// Mock data for navigation items
-const navItems = [
-  { href: "user", title: "Available Rooms", icon: <Home className="text-blue-500" />, active: true },
-  { href: "user/reservation", title: "My Reservations", icon: <Calendar className="text-blue-500" />, active: false },
-  { href: "user/favorites", title: "Favorite Rooms", icon: <Star className="text-blue-500" />, active: false },
-];
-
 // Room images mapping
 const roomImages = {
-  "Conference Room A": "/conference-room-a.jpg",
-  "Meeting Room B": "/meeting-room-b.jpg",
-  "Board Room": "/board-room.jpg"
+  "Conference Room A": "/pic1.jpg",
+  "Meeting Room B": "/pic2.jpg",
+  "Board Room": "/pic3.webp",
 };
 
 // Facility icons mapping
 const facilityIcons = {
-  "Projector": <Monitor className="h-4 w-4" />,
-  "Whiteboard": <MapPin className="h-4 w-4" />,
+  Projector: <Monitor className="h-4 w-4" />,
+  Whiteboard: <MapPin className="h-4 w-4" />,
   "Video Conference": <Users className="h-4 w-4" />,
   "TV Screen": <Monitor className="h-4 w-4" />,
-  "WiFi": <Wifi className="h-4 w-4" />,
-  "Catering": <Coffee className="h-4 w-4" />,
+  WiFi: <Wifi className="h-4 w-4" />,
+  Catering: <Coffee className="h-4 w-4" />,
 };
 
-export default function DashboardLayout() {
+export default function AvailableRoomsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeFilter, setActiveFilter] = useState("all");
   const [favorites, setFavorites] = useState([]);
-  const [darkMode, setDarkMode] = useState(false);
   const [notification, setNotification] = useState(null);
   const [bookingForm, setBookingForm] = useState({
-    activityType: '',
-    title: '',
-    date: '',
-    participants: '',
-    startTime: '',
-    duration: '',
+    activityType: "",
+    title: "",
+    date: "",
+    participants: "",
+    startTime: "",
+    duration: "",
     hasOutsideParticipants: false,
     hasCatering: false,
-    requesterName: '',
-    serviceDivision: '',
-    contactNumber: ''
+    requesterName: "",
+    serviceDivision: "",
+    contactNumber: "",
   });
+
+  // Access dark mode from localStorage or context if needed
+  const darkMode =
+    typeof document !== "undefined"
+      ? document.documentElement.classList.contains("dark")
+      : false;
 
   // Mock data for available rooms with enhanced details
   const availableRooms = [
-    { 
-      id: 1, 
+    {
+      id: 1,
       name: "Conference Room A",
       capacity: 20,
       facilities: ["Projector", "Whiteboard", "Video Conference", "WiFi"],
@@ -71,51 +93,52 @@ export default function DashboardLayout() {
       nextAvailable: "Now",
       location: "3rd Floor, East Wing",
       rating: 4.8,
-      reviews: 24
+      reviews: 24,
     },
-    { 
-      id: 2, 
+    {
+      id: 2,
       name: "Meeting Room B",
-      capacity: 8,
-      facilities: ["TV Screen", "Whiteboard", "WiFi"],
+      capacity: 20,
+      facilities: ["Projector", "Whiteboard", "Video Conference", "WiFi"],
       status: "Available",
       nextAvailable: "Now",
-      location: "2nd Floor, West Wing",
-      rating: 4.6,
-      reviews: 18
+      location: "3rd Floor, East Wing",
+      rating: 4.8,
+      reviews: 24,
     },
-    { 
-      id: 3, 
+    {
+      id: 3,
       name: "Board Room",
       capacity: 12,
       facilities: ["Projector", "Video Conference", "Catering", "WiFi"],
-      status: "Busy",
+      status: "Available",
       nextAvailable: "2:00 PM",
       location: "4th Floor, Executive Suite",
       rating: 4.9,
-      reviews: 32
+      reviews: 32,
     },
   ];
 
   // Filter rooms based on active filter
-  const filteredRooms = activeFilter === "all" 
-    ? availableRooms 
-    : activeFilter === "available" 
-      ? availableRooms.filter(room => room.status === "Available")
-      : availableRooms.filter(room => favorites.includes(room.id));
+  const filteredRooms =
+    activeFilter === "all"
+      ? availableRooms
+      : activeFilter === "available"
+      ? availableRooms.filter((room) => room.status === "Available")
+      : availableRooms.filter((room) => favorites.includes(room.id));
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setBookingForm(prev => ({
+    setBookingForm((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleCheckboxChange = (name) => {
-    setBookingForm(prev => ({
+    setBookingForm((prev) => ({
       ...prev,
-      [name]: !prev[name]
+      [name]: !prev[name],
     }));
   };
 
@@ -126,14 +149,14 @@ export default function DashboardLayout() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Booking Form Data:', { room: selectedRoom, ...bookingForm });
+    console.log("Booking Form Data:", { room: selectedRoom, ...bookingForm });
     setIsModalOpen(false);
     // Show success notification
     setNotification({
       type: "success",
-      message: `${selectedRoom.name} booked successfully!`
+      message: `${selectedRoom.name} booked successfully!`,
     });
-    
+
     setTimeout(() => {
       setNotification(null);
     }, 3000);
@@ -141,15 +164,10 @@ export default function DashboardLayout() {
 
   const toggleFavorite = (roomId) => {
     if (favorites.includes(roomId)) {
-      setFavorites(favorites.filter(id => id !== roomId));
+      setFavorites(favorites.filter((id) => id !== roomId));
     } else {
       setFavorites([...favorites, roomId]);
     }
-  };
-
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    document.documentElement.classList.toggle('dark');
   };
 
   // Generate time slots for booking
@@ -167,301 +185,263 @@ export default function DashboardLayout() {
   const timeSlots = generateTimeSlots();
 
   return (
-    <div className={cn(
-      "min-h-screen transition-colors duration-200",
-      darkMode ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
-    )}>
-      <div className="flex min-h-screen">
-        {/* Sidebar */}
-        <div
-          className={cn(
-            "fixed md:relative transition-all duration-300 h-screen z-10",
-            sidebarOpen ? "w-64" : "w-16",
-            darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-          )}
-        >
-          <div className="h-full flex flex-col border-r">
-            <div className={cn(
-              "flex h-16 items-center px-4 border-b",
-              darkMode ? "border-gray-700" : "border-gray-200"
-            )}>
-              <Image src="/psalogoo.png" alt="Logo" width={32} height={32} className="mr-2" />
-              <h2 className={cn(
-                "text-xl font-semibold", 
-                !sidebarOpen && "hidden",
-                darkMode ? "text-white" : "text-gray-900"
-              )}>
-                Room Booking
-              </h2>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="ml-auto"
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-            </div>
-            
-            <nav className="flex-1 overflow-auto py-6 px-2 space-y-4">
-              {navItems.map((item, index) => (
-                <Link
-                  key={index}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-md px-3 py-3 text-sm font-medium transition-all hover:scale-105",
-                    item.active
-                      ? darkMode 
-                        ? "bg-blue-900/30 text-blue-400" 
-                        : "bg-blue-50 text-blue-700"
-                      : darkMode
-                        ? "hover:bg-gray-700 text-gray-300"
-                        : "hover:bg-gray-100 text-gray-700"
-                  )}
-                >
-                  {item.icon}
-                  {sidebarOpen && (
-                    <span className="truncate">{item.title}</span>
-                  )}
-                </Link>
-              ))}
-            </nav>
-            
-            <div className={cn(
-              "p-4 border-t mt-auto flex items-center justify-between",
-              darkMode ? "border-gray-700" : "border-gray-200"
-            )}>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={toggleDarkMode}
-                className={darkMode ? "text-blue-400" : "text-blue-600"}
-              >
-                {darkMode ? "☀️" : "🌙"}
-              </Button>
-              
-              {sidebarOpen && (
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
-                    JD
-                  </div>
-                  <div className="text-sm font-medium">John Doe</div>
-                </div>
+    <>
+      {/* Header with search */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8">
+        <div>
+          <h1
+            className={cn(
+              "text-2xl font-bold",
+              darkMode ? "text-white" : "text-gray-900"
+            )}
+          >
+            Welcome, John!
+          </h1>
+          <p
+            className={cn(
+              "text-sm mt-1",
+              darkMode ? "text-gray-400" : "text-gray-500"
+            )}
+          >
+            Find and book your perfect meeting space
+          </p>
+        </div>
+
+        <div className="mt-4 md:mt-0 w-full md:w-auto flex gap-2">
+          <div
+            className={cn(
+              "relative rounded-md shadow-sm",
+              darkMode ? "bg-gray-800" : "bg-white"
+            )}
+          >
+            <Input
+              type="text"
+              placeholder="Search rooms..."
+              className={cn(
+                "pr-10 w-full md:w-64",
+                darkMode ? "bg-gray-800 border-gray-700 text-white" : "bg-white"
               )}
+            />
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className={cn(
+                  "h-5 w-5",
+                  darkMode ? "text-gray-400" : "text-gray-500"
+                )}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
             </div>
           </div>
         </div>
-        
-        {/* Main Content */}
-        <main className={cn(
-          "flex-1 p-6 transition-all duration-300",
-          sidebarOpen ? "" : "md:ml-16",
-        )}>
-          <div className="max-w-7xl mx-auto">
-            {/* Header with search */}
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8">
-              <div>
-                <h1 className={cn(
-                  "text-2xl font-bold",
-                  darkMode ? "text-white" : "text-gray-900"
-                )}>
-                  Welcome, John!
-                </h1>
-                <p className={cn(
-                  "text-sm mt-1",
-                  darkMode ? "text-gray-400" : "text-gray-500"
-                )}>
-                  Find and book your perfect meeting space
-                </p>
+      </div>
+
+      {/* Filters - You could add these if needed */}
+      <div className="mb-6">
+        <Tabs defaultValue="all" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="all" onClick={() => setActiveFilter("all")}>
+              All Rooms
+            </TabsTrigger>
+            <TabsTrigger
+              value="available"
+              onClick={() => setActiveFilter("available")}
+            >
+              Available
+            </TabsTrigger>
+            {/* <TabsTrigger
+              value="favorites"
+              onClick={() => setActiveFilter("favorites")}
+            >
+              Favorites
+            </TabsTrigger> */}
+          </TabsList>
+        </Tabs>
+      </div>
+
+      {/* Room Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredRooms.map((room) => (
+          <Card
+            key={room.id}
+            className={cn(
+              "overflow-hidden transition-all duration-200 hover:shadow-lg transform hover:-translate-y-1",
+              darkMode ? "bg-gray-800 border-gray-700" : "bg-white"
+            )}
+          >
+            {/* Room image */}
+            <div className="relative h-48 w-full overflow-hidden">
+              <div className="absolute top-0 right-0 m-2 z-10">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full bg-white/80 text-yellow-500 hover:text-yellow-600 hover:bg-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFavorite(room.id);
+                  }}
+                >
+                  <Star
+                    className="h-5 w-5"
+                    fill={favorites.includes(room.id) ? "currentColor" : "none"}
+                  />
+                </Button>
               </div>
-              
-              <div className="mt-4 md:mt-0 w-full md:w-auto flex gap-2">
-                <div className={cn(
-                  "relative rounded-md shadow-sm",
-                  darkMode ? "bg-gray-800" : "bg-white"
-                )}>
-                  <Input 
-                    type="text" 
-                    placeholder="Search rooms..."
+              <Image
+                src={roomImages[room.name] || "/api/placeholder/600/400"}
+                alt={room.name}
+                className="object-cover transition-all duration-200 hover:scale-110"
+                fill
+              />
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                <h3 className="font-semibold text-white text-lg">
+                  {room.name}
+                </h3>
+              </div>
+            </div>
+
+            <CardContent className="p-4">
+              <div className="flex justify-between items-center mb-3">
+                <div className="flex items-center space-x-2">
+                  <Users
                     className={cn(
-                      "pr-10 w-full md:w-64",
-                      darkMode ? "bg-gray-800 border-gray-700 text-white" : "bg-white"
+                      "h-4 w-4",
+                      darkMode ? "text-gray-400" : "text-gray-500"
                     )}
                   />
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" className={cn(
-                      "h-5 w-5",
-                      darkMode ? "text-gray-400" : "text-gray-500"
-                    )} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </div>
+                  <span
+                    className={cn(
+                      "text-sm",
+                      darkMode ? "text-gray-300" : "text-gray-700"
+                    )}
+                  >
+                    {room.capacity} people
+                  </span>
                 </div>
+                <Badge
+                  className={
+                    room.status === "Available"
+                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                      : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+                  }
+                >
+                  {room.status}
+                </Badge>
               </div>
-            </div>
-            
-            {/* Filter tabs */}
-            <Tabs defaultValue="all" className="mb-6" onValueChange={setActiveFilter}>
-              <TabsList className={cn(
-                "grid w-full grid-cols-3 max-w-md",
-                darkMode ? "bg-gray-800" : "bg-gray-100"
-              )}>
-                <TabsTrigger value="all" className="rounded-md">All Rooms</TabsTrigger>
-                <TabsTrigger value="available" className="rounded-md">Available Now</TabsTrigger>
-                <TabsTrigger value="favorites" className="rounded-md">Favorites</TabsTrigger>
-              </TabsList>
-            </Tabs>
-            
-            {/* Room Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredRooms.map((room) => (
-                <Card 
-                  key={room.id} 
+
+              <div className="flex items-center gap-1 mb-3">
+                <MapPin
                   className={cn(
-                    "overflow-hidden transition-all duration-200 hover:shadow-lg transform hover:-translate-y-1",
-                    darkMode ? "bg-gray-800 border-gray-700" : "bg-white"
+                    "h-4 w-4",
+                    darkMode ? "text-gray-400" : "text-gray-500"
+                  )}
+                />
+                <span
+                  className={cn(
+                    "text-sm",
+                    darkMode ? "text-gray-300" : "text-gray-700"
                   )}
                 >
-                  {/* Room image */}
-                  <div className="relative h-48 w-full overflow-hidden">
-                    <div className="absolute top-0 right-0 m-2 z-10">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 rounded-full bg-white/80 text-yellow-500 hover:text-yellow-600 hover:bg-white"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleFavorite(room.id);
-                        }}
-                      >
-                        <Star 
-                          className="h-5 w-5" 
-                          fill={favorites.includes(room.id) ? "currentColor" : "none"} 
-                        />
-                      </Button>
-                    </div>
-                    <Image 
-                      src={roomImages[room.name] || "/api/placeholder/600/400"}
-                      alt={room.name}
-                      className="object-cover transition-all duration-200 hover:scale-110"
-                      fill
-                    />
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-                      <h3 className="font-semibold text-white text-lg">{room.name}</h3>
-                    </div>
-                  </div>
-                  
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-center mb-3">
-                      <div className="flex items-center space-x-2">
-                        <Users className={cn(
-                          "h-4 w-4",
-                          darkMode ? "text-gray-400" : "text-gray-500"
-                        )} />
-                        <span className={cn(
-                          "text-sm",
-                          darkMode ? "text-gray-300" : "text-gray-700"
-                        )}>
-                          {room.capacity} people
-                        </span>
-                      </div>
-                      <Badge className={room.status === "Available" 
-                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                        : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-                      }>
-                        {room.status}
-                      </Badge>
-                    </div>
-                    
-                    <div className="flex items-center gap-1 mb-3">
-                      <MapPin className={cn(
-                        "h-4 w-4",
-                        darkMode ? "text-gray-400" : "text-gray-500"
-                      )} />
-                      <span className={cn(
-                        "text-sm",
-                        darkMode ? "text-gray-300" : "text-gray-700"
-                      )}>
-                        {room.location}
-                      </span>
-                    </div>
-                    
-                    <div className="mb-3">
-                      <div className={cn(
-                        "text-sm mb-2",
-                        darkMode ? "text-gray-300" : "text-gray-700"
-                      )}>
-                        Facilities:
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {room.facilities.map((facility, index) => (
-                          <TooltipProvider key={index}>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Badge variant="outline" className={cn(
-                                  "flex items-center gap-1 py-1",
-                                  darkMode ? "border-gray-700 bg-gray-700" : "border-gray-200 bg-gray-50"
-                                )}>
-                                  {facilityIcons[facility] || null}
-                                  <span className="text-xs">{facility}</span>
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>{facility} available</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-1 mb-3">
-                      <Star className="h-4 w-4 text-yellow-500" fill="currentColor" />
-                      <span className={cn(
-                        "text-sm",
-                        darkMode ? "text-gray-300" : "text-gray-700"
-                      )}>
-                        {room.rating} ({room.reviews} reviews)
-                      </span>
-                    </div>
-                    
-                    {room.status !== "Available" && (
-                      <div className={cn(
-                        "text-sm mb-3",
-                        darkMode ? "text-gray-300" : "text-gray-700"
-                      )}>
-                        <span className="font-medium">Next Available:</span> {room.nextAvailable}
-                      </div>
-                    )}
-                    
-                    <Button 
-                      className={cn(
-                        "w-full mt-2 transition-all hover:scale-105",
-                        room.status === "Available" 
-                          ? "bg-blue-600 hover:bg-blue-700 text-white" 
-                          : "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
-                      )}
-                      disabled={room.status !== "Available"}
-                      onClick={() => handleBookNow(room)}
-                    >
-                      {room.status === "Available" ? "Book Now" : "Check Later"}
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </main>
+                  {room.location}
+                </span>
+              </div>
+
+              <div className="mb-3">
+                <div
+                  className={cn(
+                    "text-sm mb-2",
+                    darkMode ? "text-gray-300" : "text-gray-700"
+                  )}
+                >
+                  Facilities:
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {room.facilities.map((facility, index) => (
+                    <TooltipProvider key={index}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "flex items-center gap-1 py-1",
+                              darkMode
+                                ? "border-gray-700 bg-gray-700"
+                                : "border-gray-200 bg-gray-50"
+                            )}
+                          >
+                            {facilityIcons[facility] || null}
+                            <span className="text-xs">{facility}</span>
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{facility} available</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1 mb-3">
+                <Star className="h-4 w-4 text-yellow-500" fill="currentColor" />
+                <span
+                  className={cn(
+                    "text-sm",
+                    darkMode ? "text-gray-300" : "text-gray-700"
+                  )}
+                >
+                  {room.rating} ({room.reviews} reviews)
+                </span>
+              </div>
+
+              {room.status !== "Available" && (
+                <div
+                  className={cn(
+                    "text-sm mb-3",
+                    darkMode ? "text-gray-300" : "text-gray-700"
+                  )}
+                >
+                  <span className="font-medium">Next Available:</span>{" "}
+                  {room.nextAvailable}
+                </div>
+              )}
+
+              <Button
+                className={cn(
+                  "w-full mt-2 transition-all hover:scale-105",
+                  room.status === "Available"
+                    ? "bg-blue-600 hover:bg-blue-700 text-white"
+                    : "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                )}
+                disabled={room.status !== "Available"}
+                onClick={() => handleBookNow(room)}
+              >
+                {room.status === "Available" ? "Book Now" : "Check Later"}
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Notification toast */}
       {notification && (
-        <div className={cn(
-          "fixed bottom-4 right-4 p-4 rounded-md shadow-lg max-w-sm transition-all animate-in slide-in-from-bottom-5 z-50",
-          notification.type === "success" 
-            ? "bg-green-600 text-white" 
-            : "bg-red-600 text-white"
-        )}>
+        <div
+          className={cn(
+            "fixed bottom-4 right-4 p-4 rounded-md shadow-lg max-w-sm transition-all animate-in slide-in-from-bottom-5 z-50",
+            notification.type === "success"
+              ? "bg-green-600 text-white"
+              : "bg-red-600 text-white"
+          )}
+        >
           <div className="flex items-center gap-2">
             {notification.type === "success" ? (
               <Check className="h-5 w-5" />
@@ -475,78 +455,96 @@ export default function DashboardLayout() {
 
       {/* Booking Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className={cn(
-          "max-w-4xl",
-          darkMode ? "bg-gray-800 text-white border-gray-700" : "bg-white"
-        )}>
+        <DialogContent
+          className={cn(
+            "max-w-4xl",
+            darkMode ? "bg-gray-800 text-white border-gray-700" : "bg-white"
+          )}
+        >
           <DialogHeader>
             <DialogTitle className="text-xl flex items-center gap-2">
               <Calendar className="h-5 w-5 text-blue-500" />
               Book {selectedRoom?.name}
             </DialogTitle>
           </DialogHeader>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Room preview panel */}
             <div className="md:col-span-1">
               <div className="rounded-md overflow-hidden">
                 <div className="relative h-48 w-full">
-                  <Image 
-                    src={selectedRoom ? (roomImages[selectedRoom.name] || "/api/placeholder/300/200") : "/api/placeholder/300/200"}
+                  <Image
+                    src={
+                      selectedRoom
+                        ? roomImages[selectedRoom.name] ||
+                          "/api/placeholder/300/200"
+                        : "/api/placeholder/300/200"
+                    }
                     alt={selectedRoom?.name || "Room"}
                     className="object-cover"
                     fill
                   />
                 </div>
               </div>
-              
+
               {selectedRoom && (
                 <div className="mt-4 space-y-3">
                   <div className="flex items-center gap-2">
                     <Users className="h-5 w-5 text-blue-500" />
                     <span>Capacity: {selectedRoom.capacity} people</span>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     <MapPin className="h-5 w-5 text-blue-500" />
                     <span>{selectedRoom.location}</span>
                   </div>
-                  
+
                   <div>
                     <div className="font-medium mb-2">Facilities:</div>
                     <div className="flex flex-wrap gap-2">
                       {selectedRoom.facilities.map((facility, index) => (
-                        <Badge key={index} variant="outline" className={cn(
-                          "flex items-center gap-1",
-                          darkMode ? "border-gray-700 bg-gray-700" : "border-gray-200"
-                        )}>
+                        <Badge
+                          key={index}
+                          variant="outline"
+                          className={cn(
+                            "flex items-center gap-1",
+                            darkMode
+                              ? "border-gray-700 bg-gray-700"
+                              : "border-gray-200"
+                          )}
+                        >
                           {facilityIcons[facility] || null}
                           {facility}
                         </Badge>
                       ))}
                     </div>
                   </div>
-                  
+
                   <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <div className="font-medium mb-2">Available time slots:</div>
+                    <div className="font-medium mb-2">
+                      Available time slots:
+                    </div>
                     <div className="grid grid-cols-3 gap-2">
                       {timeSlots.slice(0, 9).map((slot, index) => (
-                        <Badge 
+                        <Badge
                           key={index}
                           variant={slot.isAvailable ? "outline" : "secondary"}
                           className={cn(
                             "text-center cursor-pointer",
-                            slot.isAvailable 
-                              ? darkMode 
-                                ? "hover:bg-blue-900/30 hover:border-blue-700" 
+                            slot.isAvailable
+                              ? darkMode
+                                ? "hover:bg-blue-900/30 hover:border-blue-700"
                                 : "hover:bg-blue-50 hover:border-blue-200"
                               : darkMode
-                                ? "opacity-50 bg-gray-700" 
-                                : "opacity-50"
+                              ? "opacity-50 bg-gray-700"
+                              : "opacity-50"
                           )}
                           onClick={() => {
                             if (slot.isAvailable) {
-                              setBookingForm(prev => ({ ...prev, startTime: slot.time }));
+                              setBookingForm((prev) => ({
+                                ...prev,
+                                startTime: slot.time,
+                              }));
                             }
                           }}
                         >
@@ -558,7 +556,7 @@ export default function DashboardLayout() {
                 </div>
               )}
             </div>
-            
+
             {/* Booking form */}
             <div className="md:col-span-2">
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -656,7 +654,9 @@ export default function DashboardLayout() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="serviceDivision">Service/Division/Unit</Label>
+                    <Label htmlFor="serviceDivision">
+                      Service/Division/Unit
+                    </Label>
                     <Input
                       id="serviceDivision"
                       name="serviceDivision"
@@ -685,16 +685,22 @@ export default function DashboardLayout() {
                     <Checkbox
                       id="outsideParticipants"
                       checked={bookingForm.hasOutsideParticipants}
-                      onCheckedChange={() => handleCheckboxChange('hasOutsideParticipants')}
+                      onCheckedChange={() =>
+                        handleCheckboxChange("hasOutsideParticipants")
+                      }
                     />
-                    <Label htmlFor="outsideParticipants">With Outside Participants</Label>
+                    <Label htmlFor="outsideParticipants">
+                      With Outside Participants
+                    </Label>
                   </div>
 
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="catering"
                       checked={bookingForm.hasCatering}
-                      onCheckedChange={() => handleCheckboxChange('hasCatering')}
+                      onCheckedChange={() =>
+                        handleCheckboxChange("hasCatering")
+                      }
                     />
                     <Label htmlFor="catering">With Catering Services</Label>
                   </div>
@@ -704,7 +710,9 @@ export default function DashboardLayout() {
                   <Button
                     type="button"
                     variant="outline"
-                    className={darkMode ? "border-gray-600 hover:bg-gray-700" : ""}
+                    className={
+                      darkMode ? "border-gray-600 hover:bg-gray-700" : ""
+                    }
                     onClick={() => setIsModalOpen(false)}
                   >
                     Cancel
@@ -721,6 +729,6 @@ export default function DashboardLayout() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

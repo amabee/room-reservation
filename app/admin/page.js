@@ -1,173 +1,260 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
+import {
+  Bell,
+  PieChart,
+  Users,
+  Calendar,
+  ClipboardCheck,
+  CalendarRange,
+} from "lucide-react";
+import {
+  Bar,
+  BarChart,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Area,
+  AreaChart,
+  CartesianGrid,
+} from "recharts";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bell, PieChart, Users, Calendar, LayoutDashboard, ClipboardCheck, CalendarRange, Menu } from 'lucide-react';
-import Link from 'next/link';
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
 import { cn } from "@/lib/utils";
-import Image from 'next/image';
 
-const Dashboard = () => {
+const Dashboard = ({ darkMode = false }) => {
+  // Use state to store randomly generated values
+  const [statTrends, setStatTrends] = useState([]);
+
+  // Generate random trends only on the client side after initial render
+  useEffect(() => {
+    const trends = Object.keys(stats).map(() => ({
+      value: Math.floor(Math.random() * 20) + 1,
+      isIncrease: Math.random() > 0.5,
+    }));
+    setStatTrends(trends);
+  }, []);
+
   const stats = {
-    totalRooms: 5,
-    totalReservations: 24,
-    pendingApprovals: 3,
-    totalUsers: 150
+    "Total Rooms": 5,
+    Reservations: 24,
+    "Pending Approvals": 3,
+    "Active Users": 150,
   };
 
   const chartData = [
-    { name: "Mon", total: 5 },
-    { name: "Tue", total: 8 },
-    { name: "Wed", total: 12 },
-    { name: "Thu", total: 7 },
-    { name: "Fri", total: 15 },
-    { name: "Sat", total: 3 },
-    { name: "Sun", total: 4 },
+    { name: "Mon", reservations: 5, usage: 30 },
+    { name: "Tue", reservations: 8, usage: 45 },
+    { name: "Wed", reservations: 12, usage: 55 },
+    { name: "Thu", reservations: 7, usage: 40 },
+    { name: "Fri", reservations: 15, usage: 75 },
+    { name: "Sat", reservations: 3, usage: 25 },
+    { name: "Sun", reservations: 4, usage: 20 },
   ];
 
-  const navItems = [
-    {
-      title: "Dashboard",
-      href: "/admin",
-      icon: <LayoutDashboard className="h-5 w-5" />,
-      active: true
-    },
-    {
-      title: "Approvals",
-      href: "/admin/approval",
-      icon: <ClipboardCheck className="h-5 w-5" />,
-      active: false
-    },
-    {
-      title: "Reservations",
-      href: "/admin/reservation",
-      icon: <CalendarRange className="h-5 w-5" />,
-      active: false
-    }
+  const roomUsageData = [
+    { name: "Room A", usage: 85 },
+    { name: "Room B", usage: 65 },
+    { name: "Room C", usage: 92 },
+    { name: "Room D", usage: 45 },
+    { name: "Room E", usage: 78 },
   ];
 
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const recentActivity = [
+    {
+      type: "New Reservation",
+      room: "Conference Room A",
+      time: "2 hours ago",
+      user: "John Smith",
+    },
+    {
+      type: "Approved Request",
+      room: "Meeting Room B",
+      time: "4 hours ago",
+      user: "Jane Doe",
+    },
+    {
+      type: "Canceled Booking",
+      room: "Executive Suite",
+      time: "Yesterday",
+      user: "Mike Johnson",
+    },
+  ];
 
   return (
-    <div className="flex h-screen">
-      {/* Sidebar */}
-      <div
-        className={cn(
-          "fixed md:relative transition-all duration-300",
-          sidebarOpen ? "w-64" : "w-16"
-        )}
-      >
-        <div className="h-full flex flex-col border-r bg-muted/40">
-          <div className="flex h-14 items-center px-4 border-b">
-           <Image src="/psalogoo.png" alt="Logo" width={32} height={32} className="mr-2" />
-            <h2 className={cn("text-xl font-semibold", !sidebarOpen && "hidden")}>Booking System</h2>
-          </div>
-          <nav className="flex-1 overflow-auto py-2 mt-4 space-y-2">
-            {navItems.map((item, index) => (
-              <Link
-                key={index}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-lg transition-colors",
-                  item.active
-                    ? "bg-primary text-primary-foreground"
-                    : "hover:bg-muted hover:text-foreground"
-                )}
-              >
-                {item.icon}
-                {sidebarOpen && item.title}
-              </Link>
-            ))}
-          </nav>
+    <div className="w-f
+    ull">
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold">Dashboard Overview</h1>
+        <div className="flex items-center gap-4">
+          <Button variant="outline" size="sm" className="gap-2">
+            <Bell className="h-4 w-4" />
+            <span className="hidden sm:inline">Notifications</span>
+          </Button>
+          <Button size="sm" className="gap-2">
+            <PieChart className="h-4 w-4" />
+            <span className="hidden sm:inline">Reports</span>
+          </Button>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 p-6 overflow-y-auto ml-16 md:ml-0">
-        <button
-          className="fixed top-4 left-4 z-50 md:relative md:top-0 md:left-0 p-2"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-        >
-          <Menu className="h-6 w-6" />
-        </button>
-
-        <h1 className="text-3xl font-bold mb-6">Dashboard Overview</h1>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {Object.entries(stats).map(([key, value], index) => (
-            <Card key={index}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">{key.replace(/([A-Z])/g, ' $1').trim()}</CardTitle>
-                {[PieChart, Calendar, Bell, Users][index] && React.createElement([PieChart, Calendar, Bell, Users][index], { className: "h-4 w-4 text-muted-foreground" })}
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{value}</div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Charts Section */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-          {/* Weekly Overview Chart */}
-          <Card className="col-span-4">
-            <CardHeader>
-              <CardTitle>Weekly Overview</CardTitle>
-            </CardHeader>
-            <CardContent className="pl-2">
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={chartData}>
-                  <XAxis
-                    dataKey="name"
-                    stroke="#888888"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis
-                    stroke="#888888"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(value) => `$${value}`}
-                  />
-                  <Tooltip />
-                  <Bar dataKey="total" fill="#adfa1d" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          {/* Recent Activity */}
-          <Card className="col-span-3">
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {Object.entries(stats).map(([key, value], index) => (
+          <Card
+            key={index}
+            className="overflow-hidden transition-all duration-200 hover:shadow-md"
+          >
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">{key}</CardTitle>
+              {[PieChart, Calendar, Bell, Users][index] &&
+                React.createElement([PieChart, Calendar, Bell, Users][index], {
+                  className: "h-5 w-5 text-blue-600",
+                })}
             </CardHeader>
             <CardContent>
-              <div className="space-y-8">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center">
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium leading-none">
-                        New Reservation Request
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Room {i} • 2 hours ago
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <div className="text-3xl font-bold mb-1">{value}</div>
+              {statTrends.length > 0 ? (
+                <p
+                  className={cn(
+                    "text-xs",
+                    statTrends[index].isIncrease
+                      ? "text-green-500"
+                      : "text-red-500"
+                  )}
+                >
+                  {statTrends[index].value}%{" "}
+                  {statTrends[index].isIncrease ? "increase" : "decrease"} since
+                  last month
+                </p>
+              ) : (
+                <p className="text-xs text-gray-500">Calculating trend...</p>
+              )}
             </CardContent>
           </Card>
-        </div>
+        ))}
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7 mb-8">
+        {/* Weekly Overview Chart */}
+        <Card className="col-span-4">
+          <CardHeader>
+            <CardTitle>Weekly Overview</CardTitle>
+            <CardDescription>
+              Reservation count and room usage percentage
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pl-2">
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart
+                data={chartData}
+                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+              >
+                <defs>
+                  <linearGradient
+                    id="colorReservations"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="colorUsage" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <XAxis
+                  dataKey="name"
+                  stroke="#666666"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  stroke="#666666"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                <Tooltip />
+                <Area
+                  type="monotone"
+                  dataKey="reservations"
+                  stroke="#4f46e5"
+                  fillOpacity={1}
+                  fill="url(#colorReservations)"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="usage"
+                  stroke="#10b981"
+                  fillOpacity={1}
+                  fill="url(#colorUsage)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Recent Activity */}
+        <Card className="col-span-3">
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+            <CardDescription>Latest actions from the system</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {recentActivity.map((activity, i) => (
+                <div key={i} className="flex items-start space-x-4">
+                  <div
+                    className={cn(
+                      "mt-1 h-8 w-8 rounded-full flex items-center justify-center",
+                      i === 0
+                        ? "bg-blue-100 text-blue-600"
+                        : i === 1
+                        ? "bg-green-100 text-green-600"
+                        : "bg-red-100 text-red-600"
+                    )}
+                  >
+                    {i === 0 ? (
+                      <Calendar className="h-4 w-4" />
+                    ) : i === 1 ? (
+                      <ClipboardCheck className="h-4 w-4" />
+                    ) : (
+                      <Bell className="h-4 w-4" />
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      {activity.type}
+                    </p>
+                    <p className="text-sm">
+                      <span className="font-medium">{activity.room}</span> •{" "}
+                      <span className="text-muted-foreground">
+                        {activity.user}
+                      </span>
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {activity.time}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
