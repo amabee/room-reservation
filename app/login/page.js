@@ -1,12 +1,13 @@
 "use client";
 
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -15,15 +16,44 @@ const loginSchema = z.object({
 
 export default function LoginPage() {
   const [errorMessage, setErrorMessage] = useState("");
-  2;
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm({});
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
-  const onSubmit = (data) => {
-    console.log("Form Submitted", data);
+  const onSubmit = async (data) => {
+    try {
+      setIsLoading(true);
+      setErrorMessage("");
+
+      const result = await signIn("credentials", {
+        redirect: false,
+        email: data.email,
+        password: data.password,
+      });
+
+      if (!result?.error) {
+        router.push("/dashboard");
+        router.refresh();
+      } else {
+        setErrorMessage("Invalid email or password");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      setErrorMessage("An error occurred during login");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -44,16 +74,24 @@ export default function LoginPage() {
             Log in to your account
           </h1>
 
+          {errorMessage && (
+            <div
+              className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4"
+              role="alert"
+            >
+              <span className="block sm:inline">{errorMessage}</span>
+            </div>
+          )}
+
           <form className="mt-6" onSubmit={handleSubmit(onSubmit)}>
             <div>
               <label className="block text-gray-700">Email Address</label>
               <Input
                 type="email"
-                {...register("email", { required: "Email is required" })}
+                {...register("email")}
                 placeholder="Enter Email Address"
                 className="w-full px-4 py-3 rounded-lg bg-gray-200 mt-2 border focus:border-blue-500 focus:bg-white focus:outline-none"
                 autoFocus
-                required
               />
               {errors.email && (
                 <p className="text-red-500 text-sm mt-1">
@@ -66,13 +104,9 @@ export default function LoginPage() {
               <label className="block text-gray-700">Password</label>
               <Input
                 type="password"
-                {...register("password", {
-                  required: "Password is required",
-                  minLength: 6,
-                })}
+                {...register("password")}
                 placeholder="Enter Password"
                 className="w-full px-4 py-3 rounded-lg bg-gray-200 mt-2 border focus:border-blue-500 focus:bg-white focus:outline-none"
-                required
               />
               {errors.password && (
                 <p className="text-red-500 text-sm mt-1">
@@ -80,12 +114,13 @@ export default function LoginPage() {
                 </p>
               )}
             </div>
-              
+
             <Button
               type="submit"
+              disabled={isLoading}
               className="w-full block bg-blue-500 hover:bg-blue-400 focus:bg-blue-400 text-white font-semibold rounded-lg px-4 py-3 mt-6"
             >
-              Log In
+              {isLoading ? "Logging in..." : "Log In"}
             </Button>
           </form>
 
