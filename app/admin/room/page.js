@@ -89,8 +89,8 @@ export default function AvailableRoomsPage() {
       name: "Conference Room A",
       capacity: 20,
       facilities: ["Projector", "Whiteboard", "Video Conference", "WiFi"],
-
-     
+      status: "Available",
+      nextAvailable: "Now",
       location: "3rd Floor, East Wing",
     },
     {
@@ -101,8 +101,6 @@ export default function AvailableRoomsPage() {
       status: "Available",
       nextAvailable: "Now",
       location: "3rd Floor, East Wing",
-      rating: 4.8,
-      reviews: 24,
     },
     {
       id: 3,
@@ -112,7 +110,6 @@ export default function AvailableRoomsPage() {
       status: "Available",
       nextAvailable: "2:00 PM",
       location: "4th Floor, Executive Suite",
-
     },
   ];
 
@@ -185,9 +182,10 @@ export default function AvailableRoomsPage() {
     <>
       {/* Header with search */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8">
-        <div>
+        
         <h1 className="text-3xl font-bold">All Rooms</h1>
-        </div>
+        
+
 
         <div className="mt-4 md:mt-0 w-full md:w-auto flex gap-2">
           <div
@@ -239,20 +237,6 @@ export default function AvailableRoomsPage() {
             {/* Room image */}
             <div className="relative h-48 w-full overflow-hidden">
               <div className="absolute top-0 right-0 m-2 z-10">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-full bg-white/80 text-yellow-500 hover:text-yellow-600 hover:bg-white"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleFavorite(room.id);
-                  }}
-                >
-                  <Star
-                    className="h-5 w-5"
-                    fill={favorites.includes(room.id) ? "currentColor" : "none"}
-                  />
-                </Button>
               </div>
               <Image
                 src={roomImages[room.name] || "/api/placeholder/600/400"}
@@ -487,176 +471,6 @@ export default function AvailableRoomsPage() {
                   </div>
                 </div>
               )}
-            </div>
-
-            {/* Booking form */}
-            <div className="md:col-span-2">
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="activityType">Type of Activity</Label>
-                    <Input
-                      id="activityType"
-                      name="activityType"
-                      value={bookingForm.activityType}
-                      onChange={handleInputChange}
-                      className={darkMode ? "bg-gray-700 border-gray-600" : ""}
-                      placeholder="Meeting, Conference, Training..."
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Title</Label>
-                    <Input
-                      id="title"
-                      name="title"
-                      value={bookingForm.title}
-                      onChange={handleInputChange}
-                      className={darkMode ? "bg-gray-700 border-gray-600" : ""}
-                      placeholder="Project Review Meeting..."
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="date">Date of Activity</Label>
-                    <Input
-                      id="date"
-                      name="date"
-                      type="date"
-                      value={bookingForm.date}
-                      onChange={handleInputChange}
-                      className={darkMode ? "bg-gray-700 border-gray-600" : ""}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="participants">Number of Participants</Label>
-                    <Input
-                      id="participants"
-                      name="participants"
-                      type="number"
-                      value={bookingForm.participants}
-                      onChange={handleInputChange}
-                      className={darkMode ? "bg-gray-700 border-gray-600" : ""}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="startTime">Start Time</Label>
-                    <Input
-                      id="startTime"
-                      name="startTime"
-                      type="time"
-                      value={bookingForm.startTime}
-                      onChange={handleInputChange}
-                      className={darkMode ? "bg-gray-700 border-gray-600" : ""}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="duration">Duration (hours)</Label>
-                    <Input
-                      id="duration"
-                      name="duration"
-                      type="number"
-                      min="1"
-                      step="0.5"
-                      value={bookingForm.duration}
-                      onChange={handleInputChange}
-                      className={darkMode ? "bg-gray-700 border-gray-600" : ""}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="requesterName">Name of Requester</Label>
-                    <Input
-                      id="requesterName"
-                      name="requesterName"
-                      value={bookingForm.requesterName}
-                      onChange={handleInputChange}
-                      className={darkMode ? "bg-gray-700 border-gray-600" : ""}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="serviceDivision">
-                      Service/Division/Unit
-                    </Label>
-                    <Input
-                      id="serviceDivision"
-                      name="serviceDivision"
-                      value={bookingForm.serviceDivision}
-                      onChange={handleInputChange}
-                      className={darkMode ? "bg-gray-700 border-gray-600" : ""}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="contactNumber">Contact Number</Label>
-                    <Input
-                      id="contactNumber"
-                      name="contactNumber"
-                      value={bookingForm.contactNumber}
-                      onChange={handleInputChange}
-                      className={darkMode ? "bg-gray-700 border-gray-600" : ""}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="outsideParticipants"
-                      checked={bookingForm.hasOutsideParticipants}
-                      onCheckedChange={() =>
-                        handleCheckboxChange("hasOutsideParticipants")
-                      }
-                    />
-                    <Label htmlFor="outsideParticipants">
-                      With Outside Participants
-                    </Label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="catering"
-                      checked={bookingForm.hasCatering}
-                      onCheckedChange={() =>
-                        handleCheckboxChange("hasCatering")
-                      }
-                    />
-                    <Label htmlFor="catering">With Catering Services</Label>
-                  </div>
-                </div>
-
-                <div className="flex justify-end space-x-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className={
-                      darkMode ? "border-gray-600 hover:bg-gray-700" : ""
-                    }
-                    onClick={() => setIsModalOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    Submit Booking
-                  </Button>
-                </div>
-              </form>
             </div>
           </div>
         </DialogContent>
