@@ -23,11 +23,11 @@ import {
 
 const navItems = [
   { href: "/admin", title: "Dashboard", icon: Home },
-  { href: "/admin/rooms", title: "Rooms", icon: Home
+  { href: "/admin/room", title: "Rooms", icon: Home
     
    },
-  { href: "/admin/approvals", title: "Approvals", icon: CheckCheck },
-  { href: "/admin/reservations", title: "Reservations", icon: BookOpen },
+  { href: "/admin/approval", title: "Approvals", icon: CheckCheck },
+  { href: "/admin/reservation", title: "Reservations", icon: BookOpen },
   { href: "/admin/user-management", title: "User Management", icon: Users },
   { href: "/admin/settings", title: "Settings", icon: Settings },
 ];

@@ -5,6 +5,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
 import {
   Table,
@@ -16,7 +17,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, LayoutDashboard, ClipboardCheck, CalendarRange, Menu } from 'lucide-react';
+import { Search, LayoutDashboard, ClipboardCheck, CalendarRange, Menu, Clock, Users } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from "@/lib/utils";
 import Image from 'next/image';
@@ -28,71 +29,13 @@ const Reservation = () => {
     { id: 3, roomName: "Meeting Room C", requester: "Mike Johnson", email: "mike@example.com", purpose: "Training Session", date: "2025-02-25", time: "11:00", duration: "3 hours", attendees: 12, status: "approved", requestedAt: "2025-02-18" }
   ]);
 
-  const navItems = [
-    {
-      title: "Dashboard",
-      href: "/admin",
-      icon: <LayoutDashboard className="h-5 w-5" />,
-      active: false
-    },
-    {
-      title: "Approvals",
-      href: "/admin/approval",
-      icon: <ClipboardCheck className="h-5 w-5" />,
-      active: false
-    },
-    {
-      title: "Reservations",
-      href: "/admin/reservation",
-      icon: <CalendarRange className="h-5 w-5" />,
-      active: true
-    }
-  ];
-
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
     <div className="flex h-screen">
-      {/* Sidebar */}
-      <div
-        className={cn(
-          "fixed md:relative transition-all duration-300",
-          sidebarOpen ? "w-64" : "w-16"
-        )}
-      >
-        <div className="h-full flex flex-col border-r bg-muted/40">
-          <div className="flex h-14 items-center px-4 border-b">
-            <Image src="/psalogoo.png" alt="Logo" width={32} height={32} className="mr-2" />
-            <h2 className={cn("text-xl font-semibold", !sidebarOpen && "hidden")}>Booking System</h2>
-          </div>
-          <nav className="flex-1 overflow-auto py-2 mt-4 space-y-2">
-            {navItems.map((item, index) => (
-              <Link
-                key={index}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-lg transition-colors",
-                  item.active
-                    ? "bg-primary text-primary-foreground"
-                    : "hover:bg-muted hover:text-foreground"
-                )}
-              >
-                {item.icon}
-                {sidebarOpen && item.title}
-              </Link>
-            ))}
-          </nav>
-        </div>
-      </div>
-
       {/* Main Content */}
       <div className="flex-1 p-6 overflow-y-auto ml-16 md:ml-0">
-        <button
-          className="fixed top-4 left-4 z-50 md:relative md:top-0 md:left-0 p-2"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-        >
-          <Menu className="h-6 w-6" />
-        </button>
+       
 
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">All Reservations</h1>
@@ -109,14 +52,15 @@ const Reservation = () => {
           </div>
         </div>
 
-        <Card>
-          <CardHeader>
+        <Card className="shadow-md">
+          <CardHeader className="bg-gray-50 border-b">
             <CardTitle>Reservation List</CardTitle>
+            <CardDescription>Manage all room reservation requests</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="bg-gray-50">
                   <TableHead>Room</TableHead>
                   <TableHead>Requester</TableHead>
                   <TableHead>Purpose</TableHead>
@@ -124,29 +68,68 @@ const Reservation = () => {
                   <TableHead>Duration</TableHead>
                   <TableHead>Attendees</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {reservations.map(reservation => (
-                  <TableRow key={reservation.id}>
-                    <TableCell>{reservation.roomName}</TableCell>
-                    <TableCell>{reservation.requester}</TableCell>
+                  <TableRow key={reservation.id} className="hover:bg-gray-50">
+                    <TableCell className="font-medium">{reservation.roomName}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700">
+                          {reservation.requester.split(' ').map(name => name[0]).join('')}
+                        </div>
+                        <div>
+                          <div className="font-medium">{reservation.requester}</div>
+                          <div className="text-sm text-gray-500">{reservation.email}</div>
+                        </div>
+                      </div>
+                    </TableCell>
                     <TableCell>{reservation.purpose}</TableCell>
-                    <TableCell>{reservation.date} {reservation.time}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5">
+                        <CalendarRange className="h-4 w-4 text-gray-500" />
+                        <span>{new Date(reservation.date).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric'
+                        })}</span>
+                        <span className="text-gray-500">•</span>
+                        <Clock className="h-4 w-4 text-gray-500" />
+                        <span>{reservation.time}</span>
+                      </div>
+                    </TableCell>
                     <TableCell>{reservation.duration}</TableCell>
-                    <TableCell>{reservation.attendees} people</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5">
+                        <Users className="h-4 w-4 text-gray-500" />
+                        <span>{reservation.attendees}</span>
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <Badge 
-                        className={
+                        className={cn(
+                          "px-2.5 py-0.5 text-xs font-semibold",
                           reservation.status === 'approved' 
-                            ? 'bg-green-500' 
+                            ? 'bg-green-100 text-green-800 border-green-200' 
                             : reservation.status === 'pending' 
-                            ? 'bg-yellow-500' 
-                            : 'bg-red-500'
-                        }
+                            ? 'bg-amber-100 text-amber-800 border-amber-200' 
+                            : 'bg-red-100 text-red-800 border-red-200'
+                        )}
                       >
                         {reservation.status.charAt(0).toUpperCase() + reservation.status.slice(1)}
                       </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" size="sm" className="h-8 px-2">View</Button>
+                        {reservation.status === 'pending' && (
+                          <>
+                            <Button variant="outline" size="sm" className="h-8 px-2 text-green-600 border-green-200 hover:bg-green-50">Approve</Button>
+                            <Button variant="outline" size="sm" className="h-8 px-2 text-red-600 border-red-200 hover:bg-red-50">Reject</Button>
+                          </>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
