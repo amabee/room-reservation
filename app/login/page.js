@@ -6,8 +6,8 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { login } from "@/lib/auth";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -31,23 +31,24 @@ export default function LoginPage() {
     },
   });
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (inputData) => {
     try {
       setIsLoading(true);
       setErrorMessage("");
 
-      const result = await signIn("credentials", {
-        redirect: false,
-        email: data.email,
-        password: data.password,
-      });
+      const { success, data, message } = await login(
+        inputData.email,
+        inputData.password
+      );
 
-      if (!result?.error) {
-        router.push("/dashboard");
-        router.refresh();
-      } else {
-        setErrorMessage("Invalid email or password");
+      if (!success) {
+        return alert(message);
       }
+
+      router.push("/");
+      router.refresh();
+
+      alert("Success?");
     } catch (error) {
       console.error("Login error:", error);
       setErrorMessage("An error occurred during login");

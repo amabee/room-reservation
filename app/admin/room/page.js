@@ -1,6 +1,5 @@
 "use client";
-import React, { useState } from "react";
-import Link from "next/link";
+import React, { useEffect, useState } from "react";
 import {
   Pagination,
   PaginationContent,
@@ -9,70 +8,61 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination"
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+} from "@/components/ui/pagination";
+import { Card, CardFooter } from "@/components/ui/card";
 import {
-  Calendar,
-  Clock,
   Users,
-  Home,
-  Check,
-  X,
-  Menu,
-  ChevronLeft,
-  ChevronRight,
-  Star,
   Coffee,
   Wifi,
   Monitor,
-  MapPin,
   Plus,
+  BookOpen,
+  Bluetooth,
 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
-import Image from "next/image";
 
-// Room images mapping
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+
+import { AnimatePresence } from "framer-motion";
+import { PageHeader } from "../_components/RoomPageHeader";
+import { NotificationToast } from "../_components/RoomNotification";
+import { RoomCard } from "../_components/RoomCards";
+import { AddRoomModal } from "../_components/AddRoomModal";
+import { fetchRooms } from "@/lib/rooms";
+import { EmptyResults } from "../_components/EmptyResults";
+
 const roomImages = {
   "Conference Room A": "/pic1.jpg",
   "Meeting Room B": "/pic2.jpg",
   "Board Room": "/pic3.webp",
+  "Conference Room": "/pic1.jpg",
 };
 
 // Facility icons mapping
 const facilityIcons = {
   Projector: <Monitor className="h-4 w-4" />,
-  Whiteboard: <MapPin className="h-4 w-4" />,
+  Whiteboard: <BookOpen className="h-4 w-4" />,
   "Video Conference": <Users className="h-4 w-4" />,
   "TV Screen": <Monitor className="h-4 w-4" />,
   WiFi: <Wifi className="h-4 w-4" />,
   Catering: <Coffee className="h-4 w-4" />,
+  Microphone: <Users className="h-4 w-4" />,
+  "Air Conditioning": <Wifi className="h-4 w-4" />,
+  "Bluetooth Speakers": <Bluetooth className="h-4 w-4" />,
 };
 
-export default function AvailableRoomsPage() {
+// Main component
+export default function RoomsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddRoomModalOpen, setIsAddRoomModalOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [activeFilter, setActiveFilter] = useState("all");
   const [favorites, setFavorites] = useState([]);
   const [notification, setNotification] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const [rooms, setRooms] = useState([]);
+
   const [bookingForm, setBookingForm] = useState({
     activityType: "",
     title: "",
@@ -86,6 +76,7 @@ export default function AvailableRoomsPage() {
     serviceDivision: "",
     contactNumber: "",
   });
+
   const [newRoomForm, setNewRoomForm] = useState({
     name: "",
     capacity: "",
@@ -95,65 +86,48 @@ export default function AvailableRoomsPage() {
     nextAvailable: "Now",
   });
 
-  // Access dark mode from localStorage or context if needed
+  const getAllRooms = async () => {
+    const { success, data, message } = await fetchRooms();
+
+    if (!success) {
+      console.log(data);
+      return alert(message);
+    }
+
+    setRooms(data);
+  };
+
+  useEffect(() => {
+    getAllRooms();
+  }, []);
+
   const darkMode =
     typeof document !== "undefined"
       ? document.documentElement.classList.contains("dark")
       : false;
 
-  // Mock data for available rooms with enhanced details
-  const [availableRooms, setAvailableRooms] = useState([
-    {
-      id: 1,
-      name: "Conference Room A",
-      capacity: 20,
-      facilities: ["Projector", "Whiteboard", "Video Conference", "WiFi"],
-      status: "Available",
-      nextAvailable: "Now",
-      location: "3rd Floor, East Wing",
-    },
-    {
-      id: 2,
-      name: "Meeting Room B",
-      capacity: 20,
-      facilities: ["Projector", "Whiteboard", "Video Conference", "WiFi"],
-      status: "Available",
-      nextAvailable: "Now",
-      location: "3rd Floor, East Wing",
-    },
-    {
-      id: 3,
-      name: "Board Room",
-      capacity: 12,
-      facilities: ["Projector", "Video Conference", "Catering", "WiFi"],
-      status: "Available",
-      nextAvailable: "2:00 PM",
-      location: "4th Floor, Executive Suite",
-    },
-  ]);
-
-  // Filter rooms based on active filter
-  const filteredRooms =
-    activeFilter === "all"
-      ? availableRooms
-      : activeFilter === "available"
-      ? availableRooms.filter((room) => room.status === "Available")
-      : availableRooms.filter((room) => favorites.includes(room.id));
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setBookingForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  // Filter rooms based on search query and active filter
+  const filteredRooms = rooms
+    .filter((room) => {
+      if (searchQuery) {
+        return (
+          room.room_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          room.location.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      }
+      return true;
+    })
+    .filter((room) => {
+      if (activeFilter === "all") return true;
+      if (activeFilter === "available") return room.isAvailable === 1;
+      if (activeFilter === "favorites")
+        return favorites.includes(room.room_name);
+      return true;
+    });
 
   const handleNewRoomInputChange = (e) => {
     const { name, value } = e.target;
-    setNewRoomForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setNewRoomForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFacilityChange = (facility) => {
@@ -173,10 +147,7 @@ export default function AvailableRoomsPage() {
   };
 
   const handleCheckboxChange = (name) => {
-    setBookingForm((prev) => ({
-      ...prev,
-      [name]: !prev[name],
-    }));
+    setBookingForm((prev) => ({ ...prev, [name]: !prev[name] }));
   };
 
   const handleBookNow = (room) => {
@@ -188,6 +159,7 @@ export default function AvailableRoomsPage() {
     e.preventDefault();
     console.log("Booking Form Data:", { room: selectedRoom, ...bookingForm });
     setIsModalOpen(false);
+
     // Show success notification
     setNotification({
       type: "success",
@@ -202,12 +174,17 @@ export default function AvailableRoomsPage() {
   const handleAddRoom = (e) => {
     e.preventDefault();
     const newRoom = {
-      id: availableRooms.length + 1,
-      ...newRoomForm,
+      room_name: newRoomForm.name,
       capacity: parseInt(newRoomForm.capacity),
+      location: newRoomForm.location,
+      facilities: newRoomForm.facilities.join(", "),
+      isAvailable: 1,
+      addedBy: 1, // You might want to set this dynamically
     };
-    
-    setAvailableRooms([...availableRooms, newRoom]);
+
+    // You'll need to add API call to save the new room here
+    // After successful API call:
+    setRooms([...rooms, newRoom]);
     setIsAddRoomModalOpen(false);
     setNewRoomForm({
       name: "",
@@ -217,11 +194,11 @@ export default function AvailableRoomsPage() {
       status: "Available",
       nextAvailable: "Now",
     });
-    
+
     // Show success notification
     setNotification({
       type: "success",
-      message: `${newRoom.name} added successfully!`,
+      message: `${newRoom.room_name} added successfully!`,
     });
 
     setTimeout(() => {
@@ -237,298 +214,120 @@ export default function AvailableRoomsPage() {
     }
   };
 
-  // Generate time slots for booking
-  const generateTimeSlots = () => {
-    const slots = [];
-    for (let hour = 8; hour < 18; hour++) {
-      const time = `${hour}:00`;
-      const isAvailable = Math.random() > 0.3;
-      slots.push({ time, isAvailable });
-      slots.push({ time: `${hour}:30`, isAvailable: Math.random() > 0.3 });
-    }
-    return slots;
-  };
-
-  const timeSlots = generateTimeSlots();
-
   return (
     <>
-    
-      {/* Header with search */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8">
-        
-        <h1 className="text-3xl font-bold">All Rooms</h1>
-        
-        <div className="mt-4 md:mt-0 w-full md:w-auto flex flex-col gap-2">
-          <div
-            className={cn(
-              "relative rounded-md shadow-sm",
-              darkMode ? "bg-gray-800" : "bg-white"
-            )}
+      <PageHeader searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+
+      {/* Tabs for filtering */}
+      <Tabs defaultValue="all" className="mb-6" onValueChange={setActiveFilter}>
+        <TabsList className="bg-white/10 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-200 dark:border-gray-700">
+          <TabsTrigger
+            value="all"
+            className="data-[state=active]:bg-blue-600 data-[state=active]:text-white"
           >
-            <Input
-              type="text"
-              placeholder="Search rooms..."
-              className={cn(
-                "pr-10 w-full md:w-64",
-                darkMode ? "bg-gray-800 border-gray-700 text-white" : "bg-white"
-              )}
-            />
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className={cn(
-                  "h-5 w-5",
-                  darkMode ? "text-gray-400" : "text-gray-500"
-                )}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
+            All Rooms
+          </TabsTrigger>
+          <TabsTrigger
+            value="available"
+            className="data-[state=active]:bg-blue-600 data-[state=active]:text-white"
+          >
+            Available
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       {/* Room Cards */}
-      <Card>
-        <div className="flex justify-end">
-        <Button 
-           className="mt-3 mb-3"
+      <Card className="border-none shadow-lg bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
+        <div className="flex justify-between items-center p-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Showing {filteredRooms.length} of {rooms.length} rooms
+          </p>
+          <Button
+            className="bg-blue-600 hover:bg-blue-700 text-white"
             onClick={() => setIsAddRoomModalOpen(true)}
           >
-            <Plus/>
+            <Plus className="h-4 w-4 mr-2" />
             Add New Room
           </Button>
-          </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredRooms.map((room) => (
-         <Card
-         key={room.id}
-         className={cn(
-           "overflow-hidden transition-all duration-200 hover:shadow-lg transform hover:-translate-y-1",
-           darkMode ? "bg-gray-800 border-gray-700" : "bg-white"
-         )}
-       >
-         <div className="relative h-48 w-full overflow-hidden">
-           <div className="absolute top-0 right-0 m-2 z-10"></div>
-           <Image
-             src={roomImages[room.name] || "/api/placeholder/600/400"}
-             alt={room.name}
-             className="object-cover transition-all duration-200 hover:scale-110"
-             fill
-           />
-           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-             <h3 className="font-semibold text-white text-lg">{room.name}</h3>
-           </div>
-         </div>
-
-         <CardContent className="p-4">
-           <div className="flex justify-between items-center mb-3">
-             <div className="flex items-center space-x-2">
-               <Users className={cn("h-4 w-4", darkMode ? "text-gray-400" : "text-gray-500")} />
-               <span className={cn("text-sm", darkMode ? "text-gray-300" : "text-gray-700")}>
-                 {room.capacity} people
-               </span>
-             </div>
-             <Badge
-               className={
-                 room.status === "Available"
-                   ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                   : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-               }
-             >
-               {room.status}
-             </Badge>
-           </div>
-
-           <div className="flex items-center gap-1 mb-3">
-             <MapPin className={cn("h-4 w-4", darkMode ? "text-gray-400" : "text-gray-500")} />
-             <span className={cn("text-sm", darkMode ? "text-gray-300" : "text-gray-700")}>
-               {room.location}
-             </span>
-           </div>
-
-           <div className="mb-3">
-             <div className={cn("text-sm mb-2", darkMode ? "text-gray-300" : "text-gray-700")}>Facilities:</div>
-             <div className="flex flex-wrap gap-2">
-               {room.facilities.map((facility, index) => (
-                 <TooltipProvider key={index}>
-                   <Tooltip>
-                     <TooltipTrigger asChild>
-                       <Badge
-                         variant="outline"
-                         className={cn(
-                           "flex items-center gap-1 py-1",
-                           darkMode ? "border-gray-700 bg-gray-700" : "border-gray-200 bg-gray-50"
-                         )}
-                       >
-                         {facilityIcons[facility] || null}
-                         <span className="text-xs">{facility}</span>
-                       </Badge>
-                     </TooltipTrigger>
-                     <TooltipContent>
-                       <p>{facility} available</p>
-                     </TooltipContent>
-                   </Tooltip>
-                 </TooltipProvider>
-               ))}
-             </div>
-           </div>
-
-           {room.status !== "Available" && (
-             <div className={cn("text-sm mb-3", darkMode ? "text-gray-300" : "text-gray-700")}>
-               {room.nextAvailable}
-             </div>
-           )}
-
-           <div className="flex justify-end">
-             <Button variant="default">
-               Update
-             </Button>
-           </div>
-         </CardContent>
-       </Card>
-     ))}
-   </div>
-   <CardFooter>
-     <Pagination className="mt-5">
-       <PaginationContent>
-         <PaginationItem>
-           <PaginationPrevious href="#" />
-         </PaginationItem>
-         <PaginationItem>
-           <PaginationLink href="#">1</PaginationLink>
-         </PaginationItem>
-         <PaginationItem>
-           <PaginationLink href="#" isActive>
-             2
-           </PaginationLink>
-         </PaginationItem>
-         <PaginationItem>
-           <PaginationLink href="#">3</PaginationLink>
-         </PaginationItem>
-         <PaginationItem>
-           <PaginationEllipsis />
-         </PaginationItem>
-         <PaginationItem>
-           <PaginationNext href="#" />
-         </PaginationItem>
-       </PaginationContent>
-     </Pagination>
-   </CardFooter>
-</Card>
-
-
-      {/* Notification toast */}
-      {notification && (
-        <div
-          className={cn(
-            "fixed bottom-4 right-4 p-4 rounded-md shadow-lg max-w-sm transition-all animate-in slide-in-from-bottom-5 z-50",
-            notification.type === "success"
-              ? "bg-green-600 text-white"
-              : "bg-red-600 text-white"
-          )}
-        >
-          <div className="flex items-center gap-2">
-            {notification.type === "success" ? (
-              <Check className="h-5 w-5" />
-            ) : (
-              <X className="h-5 w-5" />
-            )}
-            <p>{notification.message}</p>
-          </div>
         </div>
-      )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+          {filteredRooms.map((room) => (
+            <RoomCard
+              key={room.room_name}
+              room={{
+                id: room.room_name,
+                name: room.room_name,
+                capacity: room.capacity,
+                facilities: room.facilities ? room.facilities.split(", ") : [],
+                status: room.isAvailable === 1 ? "Available" : "Unavailable",
+                nextAvailable: "Now",
+                location: room.location,
+              }}
+              darkMode={darkMode}
+              favorites={favorites}
+              toggleFavorite={toggleFavorite}
+              handleBookNow={handleBookNow}
+              roomImages={roomImages}
+              facilityIcons={facilityIcons}
+            />
+          ))}
+        </div>
+
+        {filteredRooms.length === 0 && (
+          <EmptyResults setIsAddRoomModalOpen={setIsAddRoomModalOpen} />
+        )}
+
+        <CardFooter className="border-t border-gray-200 dark:border-gray-700 p-4">
+          <Pagination className="mx-auto">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious className="hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20" />
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationLink className="hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20">
+                  1
+                </PaginationLink>
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationLink
+                  className="bg-blue-600 text-white hover:bg-blue-700"
+                  isActive
+                >
+                  2
+                </PaginationLink>
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationLink className="hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20">
+                  3
+                </PaginationLink>
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationEllipsis />
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationNext className="hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20" />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </CardFooter>
+      </Card>
+
+      <AnimatePresence>
+        {notification && <NotificationToast notification={notification} />}
+      </AnimatePresence>
 
       {/* Add New Room Modal */}
-      <Dialog open={isAddRoomModalOpen} onOpenChange={setIsAddRoomModalOpen}>
-        <DialogContent
-          className={cn(
-            "max-w-2xl",
-            darkMode ? "bg-gray-800 text-white border-gray-700" : "bg-white"
-          )}
-        >
-          <DialogHeader>
-            <DialogTitle className="text-xl flex items-center gap-2">
-              <Plus className="h-5 w-5 text-blue-500" />
-              Add New Room
-            </DialogTitle>
-          </DialogHeader>
-
-          <form onSubmit={handleAddRoom} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Room Name</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  placeholder="e.g. Conference Room C"
-                  value={newRoomForm.name}
-                  onChange={handleNewRoomInputChange}
-                  required
-                  className={darkMode ? "bg-gray-700 border-gray-600" : ""}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="capacity">Capacity</Label>
-                <Input
-                  id="capacity"
-                  name="capacity"
-                  type="number"
-                  placeholder="e.g. 12"
-                  value={newRoomForm.capacity}
-                  onChange={handleNewRoomInputChange}
-                  required
-                  className={darkMode ? "bg-gray-700 border-gray-600" : ""}
-                />
-              </div>
-
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="location">Location</Label>
-                <Input
-                  id="location"
-                  name="location"
-                  placeholder="e.g. 2nd Floor, West Wing"
-                  value={newRoomForm.location}
-                  onChange={handleNewRoomInputChange}
-                  required
-                  className={darkMode ? "bg-gray-700 border-gray-600" : ""}
-                />
-              </div>
-
-              <div className="space-y-2 md:col-span-2">
-                <Label>Facilities</Label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {Object.keys(facilityIcons).map((facility) => (
-                    <div key={facility} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`facility-${facility}`}
-                        checked={newRoomForm.facilities.includes(facility)}
-                        onCheckedChange={() => handleFacilityChange(facility)}
-                      />
-                      <Label
-                        htmlFor={`facility-${facility}`}
-                        className="flex items-center gap-1 cursor-pointer"
-                      >
-                        {facilityIcons[facility]}
-                        {facility}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div> 
-          </form>
-        </DialogContent>
-      </Dialog>
+      <AddRoomModal
+        isOpen={isAddRoomModalOpen}
+        setIsOpen={setIsAddRoomModalOpen}
+        newRoomForm={newRoomForm}
+        handleNewRoomInputChange={handleNewRoomInputChange}
+        handleFacilityChange={handleFacilityChange}
+        handleAddRoom={handleAddRoom}
+        darkMode={darkMode}
+        facilityIcons={facilityIcons}
+      />
     </>
   );
 }
