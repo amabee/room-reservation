@@ -1,7 +1,16 @@
 "use client";
 import React, { useState } from "react";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import {
   Calendar,
   Clock,
@@ -17,6 +26,7 @@ import {
   Wifi,
   Monitor,
   MapPin,
+  Plus,
 } from "lucide-react";
 import {
   Dialog,
@@ -58,6 +68,7 @@ const facilityIcons = {
 
 export default function AvailableRoomsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddRoomModalOpen, setIsAddRoomModalOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [activeFilter, setActiveFilter] = useState("all");
   const [favorites, setFavorites] = useState([]);
@@ -75,6 +86,14 @@ export default function AvailableRoomsPage() {
     serviceDivision: "",
     contactNumber: "",
   });
+  const [newRoomForm, setNewRoomForm] = useState({
+    name: "",
+    capacity: "",
+    location: "",
+    facilities: [],
+    status: "Available",
+    nextAvailable: "Now",
+  });
 
   // Access dark mode from localStorage or context if needed
   const darkMode =
@@ -83,7 +102,7 @@ export default function AvailableRoomsPage() {
       : false;
 
   // Mock data for available rooms with enhanced details
-  const availableRooms = [
+  const [availableRooms, setAvailableRooms] = useState([
     {
       id: 1,
       name: "Conference Room A",
@@ -111,7 +130,7 @@ export default function AvailableRoomsPage() {
       nextAvailable: "2:00 PM",
       location: "4th Floor, Executive Suite",
     },
-  ];
+  ]);
 
   // Filter rooms based on active filter
   const filteredRooms =
@@ -127,6 +146,30 @@ export default function AvailableRoomsPage() {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleNewRoomInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewRoomForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleFacilityChange = (facility) => {
+    setNewRoomForm((prev) => {
+      if (prev.facilities.includes(facility)) {
+        return {
+          ...prev,
+          facilities: prev.facilities.filter((f) => f !== facility),
+        };
+      } else {
+        return {
+          ...prev,
+          facilities: [...prev.facilities, facility],
+        };
+      }
+    });
   };
 
   const handleCheckboxChange = (name) => {
@@ -149,6 +192,36 @@ export default function AvailableRoomsPage() {
     setNotification({
       type: "success",
       message: `${selectedRoom.name} booked successfully!`,
+    });
+
+    setTimeout(() => {
+      setNotification(null);
+    }, 3000);
+  };
+
+  const handleAddRoom = (e) => {
+    e.preventDefault();
+    const newRoom = {
+      id: availableRooms.length + 1,
+      ...newRoomForm,
+      capacity: parseInt(newRoomForm.capacity),
+    };
+    
+    setAvailableRooms([...availableRooms, newRoom]);
+    setIsAddRoomModalOpen(false);
+    setNewRoomForm({
+      name: "",
+      capacity: "",
+      location: "",
+      facilities: [],
+      status: "Available",
+      nextAvailable: "Now",
+    });
+    
+    // Show success notification
+    setNotification({
+      type: "success",
+      message: `${newRoom.name} added successfully!`,
     });
 
     setTimeout(() => {
@@ -180,14 +253,13 @@ export default function AvailableRoomsPage() {
 
   return (
     <>
+    
       {/* Header with search */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8">
         
         <h1 className="text-3xl font-bold">All Rooms</h1>
         
-
-
-        <div className="mt-4 md:mt-0 w-full md:w-auto flex gap-2">
+        <div className="mt-4 md:mt-0 w-full md:w-auto flex flex-col gap-2">
           <div
             className={cn(
               "relative rounded-md shadow-sm",
@@ -225,128 +297,134 @@ export default function AvailableRoomsPage() {
         </div>
       </div>
       {/* Room Cards */}
+      <Card>
+        <div className="flex justify-end">
+        <Button 
+           className="mt-3 mb-3"
+            onClick={() => setIsAddRoomModalOpen(true)}
+          >
+            <Plus/>
+            Add New Room
+          </Button>
+          </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredRooms.map((room) => (
-          <Card
-            key={room.id}
-            className={cn(
-              "overflow-hidden transition-all duration-200 hover:shadow-lg transform hover:-translate-y-1",
-              darkMode ? "bg-gray-800 border-gray-700" : "bg-white"
-            )}
-          >
-            {/* Room image */}
-            <div className="relative h-48 w-full overflow-hidden">
-              <div className="absolute top-0 right-0 m-2 z-10">
-              </div>
-              <Image
-                src={roomImages[room.name] || "/api/placeholder/600/400"}
-                alt={room.name}
-                className="object-cover transition-all duration-200 hover:scale-110"
-                fill
-              />
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-                <h3 className="font-semibold text-white text-lg">
-                  {room.name}
-                </h3>
-              </div>
-            </div>
+         <Card
+         key={room.id}
+         className={cn(
+           "overflow-hidden transition-all duration-200 hover:shadow-lg transform hover:-translate-y-1",
+           darkMode ? "bg-gray-800 border-gray-700" : "bg-white"
+         )}
+       >
+         <div className="relative h-48 w-full overflow-hidden">
+           <div className="absolute top-0 right-0 m-2 z-10"></div>
+           <Image
+             src={roomImages[room.name] || "/api/placeholder/600/400"}
+             alt={room.name}
+             className="object-cover transition-all duration-200 hover:scale-110"
+             fill
+           />
+           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+             <h3 className="font-semibold text-white text-lg">{room.name}</h3>
+           </div>
+         </div>
 
-            <CardContent className="p-4">
-              <div className="flex justify-between items-center mb-3">
-                <div className="flex items-center space-x-2">
-                  <Users
-                    className={cn(
-                      "h-4 w-4",
-                      darkMode ? "text-gray-400" : "text-gray-500"
-                    )}
-                  />
-                  <span
-                    className={cn(
-                      "text-sm",
-                      darkMode ? "text-gray-300" : "text-gray-700"
-                    )}
-                  >
-                    {room.capacity} people
-                  </span>
-                </div>
-                <Badge
-                  className={
-                    room.status === "Available"
-                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                      : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-                  }
-                >
-                  {room.status}
-                </Badge>
-              </div>
+         <CardContent className="p-4">
+           <div className="flex justify-between items-center mb-3">
+             <div className="flex items-center space-x-2">
+               <Users className={cn("h-4 w-4", darkMode ? "text-gray-400" : "text-gray-500")} />
+               <span className={cn("text-sm", darkMode ? "text-gray-300" : "text-gray-700")}>
+                 {room.capacity} people
+               </span>
+             </div>
+             <Badge
+               className={
+                 room.status === "Available"
+                   ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                   : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+               }
+             >
+               {room.status}
+             </Badge>
+           </div>
 
-              <div className="flex items-center gap-1 mb-3">
-                <MapPin
-                  className={cn(
-                    "h-4 w-4",
-                    darkMode ? "text-gray-400" : "text-gray-500"
-                  )}
-                />
-                <span
-                  className={cn(
-                    "text-sm",
-                    darkMode ? "text-gray-300" : "text-gray-700"
-                  )}
-                >
-                  {room.location}
-                </span>
-              </div>
+           <div className="flex items-center gap-1 mb-3">
+             <MapPin className={cn("h-4 w-4", darkMode ? "text-gray-400" : "text-gray-500")} />
+             <span className={cn("text-sm", darkMode ? "text-gray-300" : "text-gray-700")}>
+               {room.location}
+             </span>
+           </div>
 
-              <div className="mb-3">
-                <div
-                  className={cn(
-                    "text-sm mb-2",
-                    darkMode ? "text-gray-300" : "text-gray-700"
-                  )}
-                >
-                  Facilities:
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {room.facilities.map((facility, index) => (
-                    <TooltipProvider key={index}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              "flex items-center gap-1 py-1",
-                              darkMode
-                                ? "border-gray-700 bg-gray-700"
-                                : "border-gray-200 bg-gray-50"
-                            )}
-                          >
-                            {facilityIcons[facility] || null}
-                            <span className="text-xs">{facility}</span>
-                          </Badge>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{facility} available</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  ))}
-                </div>
-              </div>
-              {room.status !== "Available" && (
-                <div
-                  className={cn(
-                    "text-sm mb-3",
-                    darkMode ? "text-gray-300" : "text-gray-700"
-                  )}
-                >
-                 {" "}
-                  {room.nextAvailable}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+           <div className="mb-3">
+             <div className={cn("text-sm mb-2", darkMode ? "text-gray-300" : "text-gray-700")}>Facilities:</div>
+             <div className="flex flex-wrap gap-2">
+               {room.facilities.map((facility, index) => (
+                 <TooltipProvider key={index}>
+                   <Tooltip>
+                     <TooltipTrigger asChild>
+                       <Badge
+                         variant="outline"
+                         className={cn(
+                           "flex items-center gap-1 py-1",
+                           darkMode ? "border-gray-700 bg-gray-700" : "border-gray-200 bg-gray-50"
+                         )}
+                       >
+                         {facilityIcons[facility] || null}
+                         <span className="text-xs">{facility}</span>
+                       </Badge>
+                     </TooltipTrigger>
+                     <TooltipContent>
+                       <p>{facility} available</p>
+                     </TooltipContent>
+                   </Tooltip>
+                 </TooltipProvider>
+               ))}
+             </div>
+           </div>
+
+           {room.status !== "Available" && (
+             <div className={cn("text-sm mb-3", darkMode ? "text-gray-300" : "text-gray-700")}>
+               {room.nextAvailable}
+             </div>
+           )}
+
+           <div className="flex justify-end">
+             <Button variant="default">
+               Update
+             </Button>
+           </div>
+         </CardContent>
+       </Card>
+     ))}
+   </div>
+   <CardFooter>
+     <Pagination className="mt-5">
+       <PaginationContent>
+         <PaginationItem>
+           <PaginationPrevious href="#" />
+         </PaginationItem>
+         <PaginationItem>
+           <PaginationLink href="#">1</PaginationLink>
+         </PaginationItem>
+         <PaginationItem>
+           <PaginationLink href="#" isActive>
+             2
+           </PaginationLink>
+         </PaginationItem>
+         <PaginationItem>
+           <PaginationLink href="#">3</PaginationLink>
+         </PaginationItem>
+         <PaginationItem>
+           <PaginationEllipsis />
+         </PaginationItem>
+         <PaginationItem>
+           <PaginationNext href="#" />
+         </PaginationItem>
+       </PaginationContent>
+     </Pagination>
+   </CardFooter>
+</Card>
+
 
       {/* Notification toast */}
       {notification && (
@@ -369,110 +447,86 @@ export default function AvailableRoomsPage() {
         </div>
       )}
 
-      {/* Booking Modal */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+      {/* Add New Room Modal */}
+      <Dialog open={isAddRoomModalOpen} onOpenChange={setIsAddRoomModalOpen}>
         <DialogContent
           className={cn(
-            "max-w-4xl",
+            "max-w-2xl",
             darkMode ? "bg-gray-800 text-white border-gray-700" : "bg-white"
           )}
         >
           <DialogHeader>
             <DialogTitle className="text-xl flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-blue-500" />
-              Book {selectedRoom?.name}
+              <Plus className="h-5 w-5 text-blue-500" />
+              Add New Room
             </DialogTitle>
           </DialogHeader>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Room preview panel */}
-            <div className="md:col-span-1">
-              <div className="rounded-md overflow-hidden">
-                <div className="relative h-48 w-full">
-                  <Image
-                    src={
-                      selectedRoom
-                        ? roomImages[selectedRoom.name] ||
-                          "/api/placeholder/300/200"
-                        : "/api/placeholder/300/200"
-                    }
-                    alt={selectedRoom?.name || "Room"}
-                    className="object-cover"
-                    fill
-                  />
-                </div>
+          <form onSubmit={handleAddRoom} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Room Name</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  placeholder="e.g. Conference Room C"
+                  value={newRoomForm.name}
+                  onChange={handleNewRoomInputChange}
+                  required
+                  className={darkMode ? "bg-gray-700 border-gray-600" : ""}
+                />
               </div>
 
-              {selectedRoom && (
-                <div className="mt-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-5 w-5 text-blue-500" />
-                    <span>Capacity: {selectedRoom.capacity} people</span>
-                  </div>
+              <div className="space-y-2">
+                <Label htmlFor="capacity">Capacity</Label>
+                <Input
+                  id="capacity"
+                  name="capacity"
+                  type="number"
+                  placeholder="e.g. 12"
+                  value={newRoomForm.capacity}
+                  onChange={handleNewRoomInputChange}
+                  required
+                  className={darkMode ? "bg-gray-700 border-gray-600" : ""}
+                />
+              </div>
 
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-blue-500" />
-                    <span>{selectedRoom.location}</span>
-                  </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="location">Location</Label>
+                <Input
+                  id="location"
+                  name="location"
+                  placeholder="e.g. 2nd Floor, West Wing"
+                  value={newRoomForm.location}
+                  onChange={handleNewRoomInputChange}
+                  required
+                  className={darkMode ? "bg-gray-700 border-gray-600" : ""}
+                />
+              </div>
 
-                  <div>
-                    <div className="font-medium mb-2">Facilities:</div>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedRoom.facilities.map((facility, index) => (
-                        <Badge
-                          key={index}
-                          variant="outline"
-                          className={cn(
-                            "flex items-center gap-1",
-                            darkMode
-                              ? "border-gray-700 bg-gray-700"
-                              : "border-gray-200"
-                          )}
-                        >
-                          {facilityIcons[facility] || null}
-                          {facility}
-                        </Badge>
-                      ))}
+              <div className="space-y-2 md:col-span-2">
+                <Label>Facilities</Label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {Object.keys(facilityIcons).map((facility) => (
+                    <div key={facility} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`facility-${facility}`}
+                        checked={newRoomForm.facilities.includes(facility)}
+                        onCheckedChange={() => handleFacilityChange(facility)}
+                      />
+                      <Label
+                        htmlFor={`facility-${facility}`}
+                        className="flex items-center gap-1 cursor-pointer"
+                      >
+                        {facilityIcons[facility]}
+                        {facility}
+                      </Label>
                     </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <div className="font-medium mb-2">
-                      Available time slots:
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      {timeSlots.slice(0, 9).map((slot, index) => (
-                        <Badge
-                          key={index}
-                          variant={slot.isAvailable ? "outline" : "secondary"}
-                          className={cn(
-                            "text-center cursor-pointer",
-                            slot.isAvailable
-                              ? darkMode
-                                ? "hover:bg-blue-900/30 hover:border-blue-700"
-                                : "hover:bg-blue-50 hover:border-blue-200"
-                              : darkMode
-                              ? "opacity-50 bg-gray-700"
-                              : "opacity-50"
-                          )}
-                          onClick={() => {
-                            if (slot.isAvailable) {
-                              setBookingForm((prev) => ({
-                                ...prev,
-                                startTime: slot.time,
-                              }));
-                            }
-                          }}
-                        >
-                          {slot.time}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              )}
-            </div>
-          </div>
+              </div>
+            </div> 
+          </form>
         </DialogContent>
       </Dialog>
     </>
