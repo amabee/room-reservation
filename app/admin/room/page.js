@@ -10,15 +10,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Card, CardFooter } from "@/components/ui/card";
-import {
-  Users,
-  Coffee,
-  Wifi,
-  Monitor,
-  Plus,
-  BookOpen,
-  Bluetooth,
-} from "lucide-react";
+import { Plus } from "lucide-react";
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -28,27 +20,16 @@ import { PageHeader } from "../_components/RoomPageHeader";
 import { NotificationToast } from "../_components/RoomNotification";
 import { RoomCard } from "../_components/RoomCards";
 import { AddRoomModal } from "../_components/AddRoomModal";
-import { fetchRooms } from "@/lib/rooms";
+import { createRoom, fetchFacilities, fetchRooms } from "@/lib/rooms";
 import { EmptyResults } from "../_components/EmptyResults";
+import { toast } from "sonner";
+import { facilityIcons } from "../_components/FacilityIcons";
 
 const roomImages = {
   "Conference Room A": "/pic1.jpg",
   "Meeting Room B": "/pic2.jpg",
   "Board Room": "/pic3.webp",
   "Conference Room": "/pic1.jpg",
-};
-
-// Facility icons mapping
-const facilityIcons = {
-  Projector: <Monitor className="h-4 w-4" />,
-  Whiteboard: <BookOpen className="h-4 w-4" />,
-  "Video Conference": <Users className="h-4 w-4" />,
-  "TV Screen": <Monitor className="h-4 w-4" />,
-  WiFi: <Wifi className="h-4 w-4" />,
-  Catering: <Coffee className="h-4 w-4" />,
-  Microphone: <Users className="h-4 w-4" />,
-  "Air Conditioning": <Wifi className="h-4 w-4" />,
-  "Bluetooth Speakers": <Bluetooth className="h-4 w-4" />,
 };
 
 // Main component
@@ -60,6 +41,8 @@ export default function RoomsPage() {
   const [favorites, setFavorites] = useState([]);
   const [notification, setNotification] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [facilities, setFacilities] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [rooms, setRooms] = useState([]);
 
@@ -97,8 +80,31 @@ export default function RoomsPage() {
     setRooms(data);
   };
 
+  const getAllFacility = async () => {
+    const { success, data, message } = await fetchFacilities();
+
+    if (!success) {
+      console.log("???");
+      return alert(message);
+    }
+
+    setFacilities(data);
+  };
+
   useEffect(() => {
-    getAllRooms();
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        await getAllRooms();
+        await getAllFacility();
+      } catch (error) {
+        toast.error(error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
   const darkMode =
@@ -106,7 +112,6 @@ export default function RoomsPage() {
       ? document.documentElement.classList.contains("dark")
       : false;
 
-  // Filter rooms based on search query and active filter
   const filteredRooms = rooms
     .filter((room) => {
       if (searchQuery) {
@@ -171,20 +176,30 @@ export default function RoomsPage() {
     }, 3000);
   };
 
-  const handleAddRoom = (e) => {
+  const handleAddRoom = async (e) => {
     e.preventDefault();
-    const newRoom = {
+
+    // Create the roomData object from your form data
+    const roomData = {
       room_name: newRoomForm.name,
-      capacity: parseInt(newRoomForm.capacity),
+      capacity: newRoomForm.capacity,
       location: newRoomForm.location,
-      facilities: newRoomForm.facilities.join(", "),
-      isAvailable: 1,
-      addedBy: 1, // You might want to set this dynamically
+      isAvailable: newRoomForm.status === "Available" ? 1 : 0,
+      addedBy: currentUser.id, // Assuming you have the current user ID available
+      facilities: newRoomForm.facilities,
     };
 
-    // You'll need to add API call to save the new room here
-    // After successful API call:
-    setRooms([...rooms, newRoom]);
+    // Get the file from your form
+    const file = document.getElementById("roomImageInput").files[0]; // Adjust the ID to match your file input
+
+    // Call createRoom with the proper parameters
+    const { success, data, message } = await createRoom(roomData, file);
+
+    if (!success) {
+      return toast.error(message || "Something went wrong lmao");
+    }
+
+    getAllRooms();
     setIsAddRoomModalOpen(false);
     setNewRoomForm({
       name: "",
@@ -195,10 +210,9 @@ export default function RoomsPage() {
       nextAvailable: "Now",
     });
 
-    // Show success notification
     setNotification({
       type: "success",
-      message: `${newRoom.room_name} added successfully!`,
+      message: `${roomData.room_name} added successfully!`,
     });
 
     setTimeout(() => {
@@ -250,32 +264,42 @@ export default function RoomsPage() {
             Add New Room
           </Button>
         </div>
+        {isLoading ? (
+          <div className="flex justify-center items-center p-12">
+            <div>Loading...</div>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+              {filteredRooms.map((room) => (
+                <RoomCard
+                  key={room.room_name}
+                  room={{
+                    id: room.room_name,
+                    name: room.room_name,
+                    capacity: room.capacity,
+                    facilities: room.facilities
+                      ? room.facilities.split(", ")
+                      : [],
+                    status:
+                      room.isAvailable === 1 ? "Available" : "Unavailable",
+                    nextAvailable: "Now",
+                    location: room.location,
+                  }}
+                  darkMode={darkMode}
+                  favorites={favorites}
+                  toggleFavorite={toggleFavorite}
+                  handleBookNow={handleBookNow}
+                  roomImages={roomImages}
+                  facilityIcons={facilityIcons}
+                />
+              ))}
+            </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
-          {filteredRooms.map((room) => (
-            <RoomCard
-              key={room.room_name}
-              room={{
-                id: room.room_name,
-                name: room.room_name,
-                capacity: room.capacity,
-                facilities: room.facilities ? room.facilities.split(", ") : [],
-                status: room.isAvailable === 1 ? "Available" : "Unavailable",
-                nextAvailable: "Now",
-                location: room.location,
-              }}
-              darkMode={darkMode}
-              favorites={favorites}
-              toggleFavorite={toggleFavorite}
-              handleBookNow={handleBookNow}
-              roomImages={roomImages}
-              facilityIcons={facilityIcons}
-            />
-          ))}
-        </div>
-
-        {filteredRooms.length === 0 && (
-          <EmptyResults setIsAddRoomModalOpen={setIsAddRoomModalOpen} />
+            {filteredRooms.length === 0 && (
+              <EmptyResults setIsAddRoomModalOpen={setIsAddRoomModalOpen} />
+            )}
+          </>
         )}
 
         <CardFooter className="border-t border-gray-200 dark:border-gray-700 p-4">
@@ -326,6 +350,7 @@ export default function RoomsPage() {
         handleFacilityChange={handleFacilityChange}
         handleAddRoom={handleAddRoom}
         darkMode={darkMode}
+        facilities={facilities}
         facilityIcons={facilityIcons}
       />
     </>
