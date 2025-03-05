@@ -25,13 +25,6 @@ import { EmptyResults } from "../_components/EmptyResults";
 import { toast } from "sonner";
 import { facilityIcons } from "../_components/FacilityIcons";
 
-const roomImages = {
-  "Conference Room A": "/pic1.jpg",
-  "Meeting Room B": "/pic2.jpg",
-  "Board Room": "/pic3.webp",
-  "Conference Room": "/pic1.jpg",
-};
-
 // Main component
 export default function RoomsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -67,6 +60,7 @@ export default function RoomsPage() {
     facilities: [],
     status: "Available",
     nextAvailable: "Now",
+    image: "",
   });
 
   const getAllRooms = async () => {
@@ -179,25 +173,25 @@ export default function RoomsPage() {
   const handleAddRoom = async (e) => {
     e.preventDefault();
 
-    // Create the roomData object from your form data
     const roomData = {
       room_name: newRoomForm.name,
       capacity: newRoomForm.capacity,
       location: newRoomForm.location,
       isAvailable: newRoomForm.status === "Available" ? 1 : 0,
-      addedBy: currentUser.id, // Assuming you have the current user ID available
       facilities: newRoomForm.facilities,
+      image: newRoomForm.image,
     };
 
-    // Get the file from your form
-    const file = document.getElementById("roomImageInput").files[0]; // Adjust the ID to match your file input
+    const file = newRoomForm.image;
 
-    // Call createRoom with the proper parameters
     const { success, data, message } = await createRoom(roomData, file);
 
     if (!success) {
+      console.log(message);
       return toast.error(message || "Something went wrong lmao");
     }
+
+    console.log(roomData, file);
 
     getAllRooms();
     setIsAddRoomModalOpen(false);
@@ -285,12 +279,12 @@ export default function RoomsPage() {
                       room.isAvailable === 1 ? "Available" : "Unavailable",
                     nextAvailable: "Now",
                     location: room.location,
+                    image: room.room_image,
                   }}
                   darkMode={darkMode}
                   favorites={favorites}
                   toggleFavorite={toggleFavorite}
                   handleBookNow={handleBookNow}
-                  roomImages={roomImages}
                   facilityIcons={facilityIcons}
                 />
               ))}

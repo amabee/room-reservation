@@ -1,4 +1,6 @@
+import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { Check, X } from "lucide-react";
 export const NotificationToast = ({ notification }) => (
   <motion.div
     initial={{ opacity: 0, y: 50 }}

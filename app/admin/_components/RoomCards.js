@@ -2,19 +2,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import { Clock, MapPin, Star, StarOff, Users } from "lucide-react";
+import { Clock, MapPin, Users } from "lucide-react";
 import Image from "next/image";
 import { FacilityBadge } from "./FacilityBadge";
 import { cn } from "@/lib/utils";
-export const RoomCard = ({
-  room,
-  darkMode,
-  favorites,
-  toggleFavorite,
-  handleBookNow,
-  roomImages,
-  facilityIcons
-}) => (
+export const RoomCard = ({ room, darkMode, handleBookNow, facilityIcons }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -28,11 +20,11 @@ export const RoomCard = ({
       )}
     >
       <div className="relative h-48 w-full overflow-hidden group">
-        <Image
-          src={roomImages[room.name] || "/api/placeholder/600/400"}
+        <img
+          src={`${process.env.NEXT_PUBLIC_ROOT_URL}uploads/${room.image}`}
           alt={room.name}
           className="object-cover transition-all duration-500 group-hover:scale-110"
-          fill
+          fill="true"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent group-hover:opacity-70 transition-opacity duration-300"></div>
         <div className="absolute bottom-0 left-0 right-0 p-4">

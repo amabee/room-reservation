@@ -112,7 +112,6 @@ export const AddRoomModal = ({
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Update the form data for submission
       handleNewRoomInputChange({
         target: {
           name: "image",
@@ -132,11 +131,9 @@ export const AddRoomModal = ({
 
   const clearImage = () => {
     setImagePreview(null);
-    // Clear the file input
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-    // Update the form data
     handleNewRoomInputChange({
       target: {
         name: "image",
@@ -386,7 +383,6 @@ export const AddRoomModal = ({
                     <div className="font-medium mb-1 text-xs sm:text-sm">Selected facilities:</div>
                     <div className="flex flex-wrap gap-1">
                       {newRoomForm.facilities.map((facilityId) => {
-                        // Find the facility object to get the name
                         const facility = facilities.find(
                           (f) => f.facility_id === facilityId
                         );
