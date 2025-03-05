@@ -6,7 +6,14 @@ import { Clock, MapPin, Users } from "lucide-react";
 import Image from "next/image";
 import { FacilityBadge } from "./FacilityBadge";
 import { cn } from "@/lib/utils";
-export const RoomCard = ({ room, darkMode, handleBookNow, facilityIcons }) => (
+
+export const RoomCard = ({
+  room,
+  darkMode,
+  handleBookNow,
+  facilityIcons,
+  handleUpdateRoom,
+}) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -126,7 +133,10 @@ export const RoomCard = ({ room, darkMode, handleBookNow, facilityIcons }) => (
           >
             Book Now
           </Button>
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Button
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+            onClick={() => handleUpdateRoom(room)}
+          >
             Update
           </Button>
         </div>

@@ -24,12 +24,16 @@ import { createRoom, fetchFacilities, fetchRooms } from "@/lib/rooms";
 import { EmptyResults } from "../_components/EmptyResults";
 import { toast } from "sonner";
 import { facilityIcons } from "../_components/FacilityIcons";
+import { UpdateRoomModal } from "../_components/UpdateRoomModal";
+import { Dialog, DialogTitle } from "@/components/ui/dialog";
 
 // Main component
 export default function RoomsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddRoomModalOpen, setIsAddRoomModalOpen] = useState(false);
+  const [isUpdateRoomModalOpen, setIsUpdateRoomModalOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
+  const [selectedRoomForUpdate, setSelectedRoomForUpdate] = useState(null);
   const [activeFilter, setActiveFilter] = useState("all");
   const [favorites, setFavorites] = useState([]);
   const [notification, setNotification] = useState(null);
@@ -214,6 +218,19 @@ export default function RoomsPage() {
     }, 3000);
   };
 
+  const handleUpdateRoom = (room) => {
+    setSelectedRoomForUpdate({
+      id: room.room_id,
+      name: room.room_name,
+      capacity: room.capacity,
+      facilities: room.facilities ? room.facilities.split(", ") : [],
+      location: room.location,
+      image: room.room_image,
+      status: room.isAvailable === 1 ? "Available" : "Unavailable",
+    });
+    setIsUpdateRoomModalOpen(true);
+  };
+
   const toggleFavorite = (roomId) => {
     if (favorites.includes(roomId)) {
       setFavorites(favorites.filter((id) => id !== roomId));
@@ -267,9 +284,9 @@ export default function RoomsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
               {filteredRooms.map((room) => (
                 <RoomCard
-                  key={room.room_name}
+                  key={room.room_id}
                   room={{
-                    id: room.room_name,
+                    id: room.room_id,
                     name: room.room_name,
                     capacity: room.capacity,
                     facilities: room.facilities
@@ -282,9 +299,11 @@ export default function RoomsPage() {
                     image: room.room_image,
                   }}
                   darkMode={darkMode}
-                  favorites={favorites}
-                  toggleFavorite={toggleFavorite}
-                  handleBookNow={handleBookNow}
+                  handleBookNow={(selectedRoom) => {
+                    setSelectedRoom(selectedRoom);
+                    setIsModalOpen(true);
+                  }}
+                  handleUpdateRoom={() => handleUpdateRoom(room)}
                   facilityIcons={facilityIcons}
                 />
               ))}
@@ -339,6 +358,7 @@ export default function RoomsPage() {
       <AddRoomModal
         isOpen={isAddRoomModalOpen}
         setIsOpen={setIsAddRoomModalOpen}
+        setIsUpdateRoomModalOpen={setIsUpdateRoomModalOpen}
         newRoomForm={newRoomForm}
         handleNewRoomInputChange={handleNewRoomInputChange}
         handleFacilityChange={handleFacilityChange}
@@ -346,6 +366,18 @@ export default function RoomsPage() {
         darkMode={darkMode}
         facilities={facilities}
         facilityIcons={facilityIcons}
+      />
+      {/* Update Room Modal */}
+      <UpdateRoomModal
+        isUpdateOpen={isUpdateRoomModalOpen}
+        setUpdateIsOpen={setIsUpdateRoomModalOpen}
+        roomData={selectedRoomForUpdate}
+        facilities={facilities}
+        facilityIcons={facilityIcons}
+        darkMode={darkMode}
+        getAllRooms={getAllRooms}
+        updateRoomForm={selectedRoomForUpdate}
+        currentRoom={selectedRoomForUpdate}
       />
     </>
   );
