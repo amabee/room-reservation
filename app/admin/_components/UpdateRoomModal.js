@@ -24,23 +24,25 @@ export const UpdateRoomModal = ({
   facilityIcons,
   facilities,
   currentRoom,
+  updateRoom,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
 
-  // Reset form and preview when room changes
   useEffect(() => {
     if (currentRoom) {
-      // Set image preview if there's an existing room image
-      if (currentRoom.room_image) {
-        setImagePreview(`/uploads/${currentRoom.room_image}`);
+      if (currentRoom.image) {
+        setImagePreview(
+          `${process.env.NEXT_PUBLIC_ROOT_URL}uploads/${currentRoom.image}`
+        );
       } else {
         setImagePreview(null);
       }
     }
   }, [currentRoom]);
+
 
   const categories = {
     All: "All Facilities",
@@ -164,8 +166,7 @@ export const UpdateRoomModal = ({
   if (!isUpdateOpen || !currentRoom) return null;
 
   return (
-    <Dialog open={isUpdateOpen} 
-    onOpenChange={setUpdateIsOpen}>
+    <Dialog open={isUpdateOpen} onOpenChange={setUpdateIsOpen}>
       <DialogContent
         className={cn(
           "max-w-2xl md:max-w-4xl lg:max-w-6xl xl:max-w-7xl rounded-lg overflow-hidden",
@@ -437,14 +438,14 @@ export const UpdateRoomModal = ({
           <Button
             type="button"
             variant="outline"
-            onClick={() => setIsOpen(false)}
+            onClick={() => setUpdateIsOpen(false)}
             className="border-gray-300 dark:border-gray-600"
           >
             Cancel
           </Button>
           <Button
             type="submit"
-            onClick={handleUpdateRoom}
+            onClick={updateRoom}
             className="bg-blue-600 hover:bg-blue-700 text-white"
           >
             Update Room

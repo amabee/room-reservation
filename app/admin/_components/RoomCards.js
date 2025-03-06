@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 export const RoomCard = ({
   room,
   darkMode,
-  handleBookNow,
+  handleDeleteRoom,
   facilityIcons,
   handleUpdateRoom,
 }) => (
@@ -128,10 +128,10 @@ export const RoomCard = ({
         <div className="flex justify-end">
           <Button
             variant="outline"
-            className="mr-2 border-blue-200 text-blue-600 hover:bg-blue-50 hover:text-blue-700 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/30"
-            onClick={() => handleBookNow(room)}
+            className="mr-2 border-red-200 text-red-600 hover:bg-red-50 hover:red-blue-700 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-800/30"
+            onClick={() => handleDeleteRoom(room.id)}
           >
-            Book Now
+            Delete Room
           </Button>
           <Button
             className="bg-blue-600 hover:bg-blue-700 text-white"

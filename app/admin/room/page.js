@@ -20,7 +20,13 @@ import { PageHeader } from "../_components/RoomPageHeader";
 import { NotificationToast } from "../_components/RoomNotification";
 import { RoomCard } from "../_components/RoomCards";
 import { AddRoomModal } from "../_components/AddRoomModal";
-import { createRoom, fetchFacilities, fetchRooms } from "@/lib/rooms";
+import {
+  createRoom,
+  deleteRoom,
+  fetchFacilities,
+  fetchRooms,
+  updateRoom,
+} from "@/lib/rooms";
 import { EmptyResults } from "../_components/EmptyResults";
 import { toast } from "sonner";
 import { facilityIcons } from "../_components/FacilityIcons";
@@ -43,21 +49,18 @@ export default function RoomsPage() {
 
   const [rooms, setRooms] = useState([]);
 
-  const [bookingForm, setBookingForm] = useState({
-    activityType: "",
-    title: "",
-    date: "",
-    participants: "",
-    startTime: "",
-    duration: "",
-    hasOutsideParticipants: false,
-    hasCatering: false,
-    requesterName: "",
-    serviceDivision: "",
-    contactNumber: "",
+  const [newRoomForm, setNewRoomForm] = useState({
+    name: "",
+    capacity: "",
+    location: "",
+    facilities: [],
+    status: "Available",
+    nextAvailable: "Now",
+    image: "",
   });
 
-  const [newRoomForm, setNewRoomForm] = useState({
+  const [updateRoomForm, setUpdateRoomForm] = useState({
+    id: 0,
     name: "",
     capacity: "",
     location: "",
@@ -128,9 +131,14 @@ export default function RoomsPage() {
       return true;
     });
 
-  const handleNewRoomInputChange = (e) => {
+    const handleNewRoomInputChange = (e) => {
+      const { name, value } = e.target;
+      setNewRoomForm((prev) => ({ ...prev, [name]: value }));
+    };
+
+  const handleUpdateRoomInputChange = (e) => {
     const { name, value } = e.target;
-    setNewRoomForm((prev) => ({ ...prev, [name]: value }));
+    setUpdateRoomForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFacilityChange = (facility) => {
@@ -149,29 +157,20 @@ export default function RoomsPage() {
     });
   };
 
-  const handleCheckboxChange = (name) => {
-    setBookingForm((prev) => ({ ...prev, [name]: !prev[name] }));
-  };
-
-  const handleBookNow = (room) => {
-    setSelectedRoom(room);
-    setIsModalOpen(true);
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Booking Form Data:", { room: selectedRoom, ...bookingForm });
-    setIsModalOpen(false);
-
-    // Show success notification
-    setNotification({
-      type: "success",
-      message: `${selectedRoom.name} booked successfully!`,
+  const handleUpdateFacilityChange = (facilityId) => {
+    setUpdateRoomForm((prev) => {
+      if (prev.facilities.includes(facilityId)) {
+        return {
+          ...prev,
+          facilities: prev.facilities.filter((f) => f !== facilityId),
+        };
+      } else {
+        return {
+          ...prev,
+          facilities: [...prev.facilities, facilityId],
+        };
+      }
     });
-
-    setTimeout(() => {
-      setNotification(null);
-    }, 3000);
   };
 
   const handleAddRoom = async (e) => {
@@ -191,11 +190,12 @@ export default function RoomsPage() {
     const { success, data, message } = await createRoom(roomData, file);
 
     if (!success) {
-      console.log(message);
-      return toast.error(message || "Something went wrong lmao");
+      setNotification({
+        type: "error",
+        message: `Something went wrong: ${message}`,
+      });
+      return;
     }
-
-    console.log(roomData, file);
 
     getAllRooms();
     setIsAddRoomModalOpen(false);
@@ -219,31 +219,88 @@ export default function RoomsPage() {
   };
 
   const handleUpdateRoom = (room) => {
-    setSelectedRoomForUpdate({
+    const formData = {
       id: room.room_id,
-      name: room.room_name,
-      capacity: room.capacity,
+      name: room.room_name || "",
+      capacity: room.capacity || "",
       facilities: room.facilities ? room.facilities.split(", ") : [],
-      location: room.location,
-      image: room.room_image,
+      location: room.location || "",
+      image: room.room_image || null,
       status: room.isAvailable === 1 ? "Available" : "Unavailable",
-    });
+    };
+
+    console.log(formData);
+
+    setSelectedRoomForUpdate(formData);
+    setUpdateRoomForm(formData);
     setIsUpdateRoomModalOpen(true);
   };
 
-  const toggleFavorite = (roomId) => {
-    if (favorites.includes(roomId)) {
-      setFavorites(favorites.filter((id) => id !== roomId));
-    } else {
-      setFavorites([...favorites, roomId]);
+  const updateRoomFunc = async (e) => {
+    e.preventDefault();
+
+    const updatedRoomData = {
+      id: updateRoomForm.id,
+      room_name: updateRoomForm.name,
+      capacity: updateRoomForm.capacity,
+      location: updateRoomForm.location,
+      isAvailable: updateRoomForm.status === "Available" ? 1 : 0,
+      facilities: updateRoomForm.facilities,
+      image: updateRoomForm.image,
+    };
+
+    const file = updateRoomForm.image;
+
+    const { success, data, message } = await updateRoom(updatedRoomData, file);
+
+    if (!success) {
+      setNotification({
+        type: "error",
+        message: `Something went wrong: ${message}`,
+      });
+      return;
     }
+
+    getAllRooms();
+    setIsUpdateRoomModalOpen(false);
+
+    setNotification({
+      type: "success",
+      message: `${updatedRoomData.room_name} updated successfully!`,
+    });
+
+    setTimeout(() => {
+      setNotification(null);
+    }, 3000);
+  };
+
+  const handleDeleteRoom = async (roomId) => {
+    const { success, data, message } = await deleteRoom(roomId);
+
+    if (!success) {
+      setNotification({
+        type: "error",
+        message: `Something went wrong: ${message}`,
+      });
+      return;
+    }
+
+    getAllRooms();
+
+    setNotification({
+      type: "success",
+      message: `Room Deleted!`,
+    });
+
+    setTimeout(() => {
+      setNotification(null);
+    }, 3000);
   };
 
   return (
     <>
       <PageHeader searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 
-      {/* Tabs for filtering */}
       <Tabs defaultValue="all" className="mb-6" onValueChange={setActiveFilter}>
         <TabsList className="bg-white/10 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-200 dark:border-gray-700">
           <TabsTrigger
@@ -305,6 +362,7 @@ export default function RoomsPage() {
                   }}
                   handleUpdateRoom={() => handleUpdateRoom(room)}
                   facilityIcons={facilityIcons}
+                  handleDeleteRoom={handleDeleteRoom}
                 />
               ))}
             </div>
@@ -376,8 +434,12 @@ export default function RoomsPage() {
         facilityIcons={facilityIcons}
         darkMode={darkMode}
         getAllRooms={getAllRooms}
-        updateRoomForm={selectedRoomForUpdate}
+        updateRoomForm={updateRoomForm}
         currentRoom={selectedRoomForUpdate}
+        handleUpdateRoomInputChange={handleUpdateRoomInputChange}
+        handleFacilityChange={handleUpdateFacilityChange}
+        handleUpdateRoom={handleUpdateRoom}
+        updateRoom={updateRoomFunc}
       />
     </>
   );
