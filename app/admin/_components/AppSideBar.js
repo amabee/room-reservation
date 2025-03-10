@@ -20,17 +20,22 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { logout } from "@/lib/auth";
 
 const navItems = [
   { href: "/admin", title: "Dashboard", icon: Home },
-  { href: "/admin/room", title: "Rooms", icon: Home
-    
-   },
+  { href: "/admin/room", title: "Rooms", icon: Home },
   // { href: "/admin/approval", title: "Approvals", icon: CheckCheck },
   { href: "/admin/reservation", title: "Reservations", icon: BookOpen },
   { href: "/admin/usermanagement", title: "User Management", icon: Users },
   { href: "/admin/settings", title: "Settings", icon: Settings },
 ];
+
+const handleLogOut = async () => {
+  await logout();
+
+  window.location.href = "/login";
+};
 
 export function AppSidebar({ sidebarOpen, setSidebarOpen, darkMode }) {
   return (
@@ -113,6 +118,7 @@ export function AppSidebar({ sidebarOpen, setSidebarOpen, darkMode }) {
               <Button
                 variant="ghost"
                 size="icon"
+                onClick={() => handleLogOut()}
                 className={cn(
                   "w-full justify-start rounded-lg px-3 py-2",
                   darkMode
