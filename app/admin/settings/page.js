@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { AnimatePresence } from "framer-motion";
+import { NotificationToast } from "../_components/RoomNotification";
+import { updateUserPassword } from "@/lib/account-management";
 
 export default function SettingsPage() {
   const [passwords, setPasswords] = useState({
@@ -12,16 +15,57 @@ export default function SettingsPage() {
     newPassword: "",
     confirmPassword: "",
   });
+  const [notification, setNotification] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setPasswords((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle password change logic here
-    console.log("Password changed", passwords);
+
+    if (passwords.newPassword !== passwords.confirmPassword) {
+      setNotification({
+        type: "error",
+        message: `New Password and Confirm Password are not the same!`,
+      });
+
+      return;
+    }
+
+    const { success, message, data } = await updateUserPassword(
+      passwords.currentPassword,
+      passwords.confirmPassword
+    );
+
+    if (!success) {
+      console.log(data);
+      setNotification({
+        type: "error",
+        message: message,
+      });
+
+      setTimeout(() => {
+        setNotification(null);
+      }, 1000);
+      return;
+    }
+
+    setPasswords({
+      currentPassword: "",
+      confirmPassword: "",
+      newPassword: "",
+    });
+
+    setNotification({
+      type: "success",
+      message: `Password successfully updated!`,
+    });
+
+    setTimeout(() => {
+      setNotification(null);
+    }, 1000);
   };
 
   return (
@@ -73,6 +117,10 @@ export default function SettingsPage() {
           </form>
         </CardContent>
       </Card>
+
+      <AnimatePresence>
+        {notification && <NotificationToast notification={notification} />}
+      </AnimatePresence>
     </div>
   );
 }
