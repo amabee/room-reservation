@@ -26,7 +26,7 @@ const navItems = [
   { href: "/admin/room", title: "Rooms", icon: Home
     
    },
-  { href: "/admin/approval", title: "Approvals", icon: CheckCheck },
+  // { href: "/admin/approval", title: "Approvals", icon: CheckCheck },
   { href: "/admin/reservation", title: "Reservations", icon: BookOpen },
   { href: "/admin/usermanagement", title: "User Management", icon: Users },
   { href: "/admin/settings", title: "Settings", icon: Settings },

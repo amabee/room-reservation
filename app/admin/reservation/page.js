@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CalendarIcon, Search, RefreshCw } from "lucide-react";
-import { fetchReservations } from "@/lib/reservations";
+import { fetchReservations, updateReservationStatus } from "@/lib/reservations";
 
 const Reservation = () => {
   const [reservations, setReservations] = useState([]);
@@ -48,16 +48,13 @@ const Reservation = () => {
       return alert(message);
     }
 
-    // Process the data to format dates and times
     const processedData = data.map((res) => {
-      // Initialize default values
       let startDate = "Not specified";
       let startTime = "Not specified";
       let endDate = "Not specified";
       let endTime = "Not specified";
       let duration = "";
 
-      // Process start_time if valid
       if (isValidDate(res.start_time)) {
         try {
           const startDateTime = new Date(res.start_time);
@@ -67,7 +64,6 @@ const Reservation = () => {
             minute: "2-digit",
           });
 
-          // Process end_time if valid
           if (isValidDate(res.end_time)) {
             const endDateTime = new Date(res.end_time);
             endDate = endDateTime.toISOString().split("T")[0];
@@ -76,7 +72,6 @@ const Reservation = () => {
               minute: "2-digit",
             });
 
-            // Calculate duration
             const durationMs = endDateTime - startDateTime;
             const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
             const durationMinutes = Math.floor(
@@ -95,19 +90,24 @@ const Reservation = () => {
         roomName: res.room_name,
         requester: res.name,
         email: res.email,
-        purpose: "Not specified", 
+        title: res.title,
+        activityType: res.activity_type,
         startDate: startDate,
         startTime: startTime,
         endDate: endDate,
         endTime: endTime,
         duration: duration,
-        attendees: "Not specified", 
+        attendees: res.numOfParticipants,
         status: res.status,
         room_id: res.room_id,
         user_id: res.user_id,
         created_at: res.created_at,
         start_time: res.start_time,
-        end_time: res.end_time
+        end_time: res.end_time,
+        outsideParticipant: res.outsideParticipants,
+        cateringServices: res.cateringServices,
+        serviceDivisionUnit: res.serviceDivisionUnit,
+        contact_number: res.contact_number,
       };
     });
 
@@ -143,8 +143,19 @@ const Reservation = () => {
     setFilteredReservations(result);
   }, [searchTerm, statusFilter, dateFilter, reservations]);
 
-  const handleStatusChange = (id, newStatus) => {
+  const handleStatusChange = async (id, newStatus) => {
     setIsLoading(true);
+
+    const { success, message, data } = await updateReservationStatus(
+      id,
+      newStatus
+    );
+
+    if (!success) {
+      return alert(message);
+    }
+
+    alert("SUCCESS");
 
     setTimeout(() => {
       setReservations((prevReservations) =>
@@ -162,7 +173,9 @@ const Reservation = () => {
     setDateFilter("all");
   };
 
-  const uniqueDates = [...new Set(reservations.map((res) => res.startDate))].sort();
+  const uniqueDates = [
+    ...new Set(reservations.map((res) => res.startDate)),
+  ].sort();
 
   return (
     <div className="space-y-6">
@@ -265,10 +278,16 @@ const Reservation = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Room Name</TableHead>
+                    <TableHead>Type Of Activity</TableHead>
+                    <TableHead>Title</TableHead>
                     <TableHead>Requester</TableHead>
+                    <TableHead>With Outside Participants</TableHead>
+                    <TableHead>With Catering Services</TableHead>
                     <TableHead>Start Date & Time</TableHead>
                     <TableHead>End Date & Time</TableHead>
                     <TableHead>Duration</TableHead>
+                    <TableHead>Division</TableHead>
+                    <TableHead>Contact Number</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -280,26 +299,64 @@ const Reservation = () => {
                         {reservation.roomName}
                       </TableCell>
                       <TableCell>
+                        <div className="text-md text-gray-600">
+                          {reservation.activityType}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-md text-gray-600">
+                          {reservation.title}
+                        </div>
+                      </TableCell>
+                      <TableCell>
                         {reservation.requester}
                         <div className="text-xs text-gray-500">
                           {reservation.email}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div>{reservation.startDate}</div>
-                        <div className="text-xs text-gray-500">{reservation.startTime}</div>
-                      </TableCell>
-                      <TableCell>
-                        <div>{reservation.endDate}</div>
-                        <div className="text-xs text-gray-500">{reservation.endTime}</div>
-                      </TableCell>
-                      <TableCell>
-                        {reservation.duration || "N/A"}
+                        <Badge
+                          className={
+                            reservation.outsideParticipant === 1
+                              ? "bg-green-500 text-white pointer-events-none"
+                              : "bg-white text-black border border-gray-400 pointer-events-none"
+                          }
+                        >
+                          {reservation.outsideParticipant === 1 ? "YES" : "NO"}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge
                           className={
-                            reservation.status === "approved"
+                            reservation.cateringServices === 1
+                              ? "bg-green-500 text-white pointer-events-none"
+                              : "bg-white text-black border border-gray-400 pointer-events-none"
+                          }
+                        >
+                          {reservation.cateringServices === 1 ? "YES" : "NO"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div>{reservation.startDate}</div>
+                        <div className="text-xs text-gray-500">
+                          {reservation.startTime}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>{reservation.endDate}</div>
+                        <div className="text-xs text-gray-500">
+                          {reservation.endTime}
+                        </div>
+                      </TableCell>
+                      <TableCell>{reservation.duration || "N/A"}</TableCell>
+                      <TableCell>
+                        {reservation.serviceDivisionUnit || "N/A"}
+                      </TableCell>
+                      <TableCell>{reservation.contact_nu || "N/A"}</TableCell>
+                      <TableCell>
+                        <Badge
+                          className={
+                            reservation.status === "confirmed"
                               ? "bg-green-500 text-white"
                               : reservation.status === "rejected"
                               ? "bg-red-500 text-white"
@@ -317,7 +374,7 @@ const Reservation = () => {
                               variant="outline"
                               className="bg-green-50 text-green-600 hover:bg-green-100"
                               onClick={() =>
-                                handleStatusChange(reservation.id, "approved")
+                                handleStatusChange(reservation.id, "confirmed")
                               }
                               disabled={isLoading}
                             >

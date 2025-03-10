@@ -131,10 +131,10 @@ export default function RoomsPage() {
       return true;
     });
 
-    const handleNewRoomInputChange = (e) => {
-      const { name, value } = e.target;
-      setNewRoomForm((prev) => ({ ...prev, [name]: value }));
-    };
+  const handleNewRoomInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewRoomForm((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleUpdateRoomInputChange = (e) => {
     const { name, value } = e.target;
@@ -350,7 +350,13 @@ export default function RoomsPage() {
                       ? room.facilities.split(", ")
                       : [],
                     status:
-                      room.isAvailable === 1 ? "Available" : "Unavailable",
+                      room.isAvailable === 1
+                        ? "Available"
+                        : room.isAvailable === 2
+                        ? "In Use"
+                        : room.isAvailable === 3
+                        ? "Unavailable"
+                        : "",
                     nextAvailable: "Now",
                     location: room.location,
                     image: room.room_image,
@@ -372,40 +378,6 @@ export default function RoomsPage() {
             )}
           </>
         )}
-
-        <CardFooter className="border-t border-gray-200 dark:border-gray-700 p-4">
-          <Pagination className="mx-auto">
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious className="hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20" />
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationLink className="hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20">
-                  1
-                </PaginationLink>
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationLink
-                  className="bg-blue-600 text-white hover:bg-blue-700"
-                  isActive
-                >
-                  2
-                </PaginationLink>
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationLink className="hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20">
-                  3
-                </PaginationLink>
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationEllipsis />
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationNext className="hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20" />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </CardFooter>
       </Card>
 
       <AnimatePresence>

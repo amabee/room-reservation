@@ -45,7 +45,7 @@ export default function AdminLayout({ children }) {
             sidebarOpen ? "" : "md:ml-16"
           )}
         >
-          <div className="max-w-7xl mx-auto">{children}</div>
+          <div className="max-w-6xl mx-auto">{children}</div>
           <Toaster 
           richColors={true} />
         </main>
