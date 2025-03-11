@@ -30,7 +30,7 @@ export function BookingModal({
     <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
       <DialogContent
         className={cn(
-          "max-w-4xl",
+          "max-w-6xl",
           darkMode ? "bg-gray-800 text-white border-gray-700" : "bg-white"
         )}
       >
