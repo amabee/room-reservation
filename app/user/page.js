@@ -12,6 +12,7 @@ import {
   getAvailableRooms,
 } from "./_components/roomdata";
 import { fetchRooms } from "@/lib/user/rooms";
+import { createReservation } from "@/lib/user/reservations";
 
 export default function AvailableRoomsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -20,6 +21,7 @@ export default function AvailableRoomsPage() {
   const [favorites, setFavorites] = useState([]);
   const [notification, setNotification] = useState(null);
   const [rooms, setRooms] = useState([]);
+  const [isCreating, setIsCreating] = useState(false);
 
   const [bookingForm, setBookingForm] = useState({
     activityType: "",
@@ -81,15 +83,18 @@ export default function AvailableRoomsPage() {
   };
 
   const combineDateTime = (date, time) => {
-    if (!date || !time) return null;
+    const combined = new Date(`${date}T${time}`);
+    const year = combined.getFullYear();
+    const month = String(combined.getMonth() + 1).padStart(2, "0");
+    const day = String(combined.getDate()).padStart(2, "0");
+    const hours = String(combined.getHours()).padStart(2, "0");
+    const minutes = String(combined.getMinutes()).padStart(2, "0");
+    const seconds = String(combined.getSeconds()).padStart(2, "0");
 
-    const [year, month, day] = date.split("-");
-    const [hours, minutes] = time.split(":");
-
-    return new Date(year, month - 1, day, hours, minutes);
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const startDateTime = combineDateTime(
@@ -101,13 +106,38 @@ export default function AvailableRoomsPage() {
       bookingForm.endTime
     );
 
-    console.log("Booking Form Data:", {
-      room: selectedRoom,
-      ...bookingForm,
+    // console.log("Booking Form Data:", {
+    //   room: selectedRoom.room_id,
+    //   ...bookingForm,
+    //   startDateTime,
+    //   endDateTime,
+    // });
+
+    setIsCreating(true);
+
+    const { success, message, data } = await createReservation(
+      selectedRoom.room_id,
+      bookingForm.activityType,
+      bookingForm.title,
+      bookingForm.hasOutsideParticipants == true ? 1 : 0,
+      bookingForm.hasCatering == true ? 1 : 0,
+      bookingForm.serviceDivision,
+      bookingForm.contactNumber,
+      bookingForm.participants,
       startDateTime,
       endDateTime,
-    });
+      "pending"
+    );
 
+    if (!success) {
+      setIsCreating(false);
+      return setNotification({
+        type: "error",
+        message: `Something went wrong reserving the room: ${message}`,
+      });
+    }
+
+    setIsCreating(false);
     setIsModalOpen(false);
     setNotification({
       type: "success",
@@ -174,6 +204,7 @@ export default function AvailableRoomsPage() {
           handleCheckboxChange={handleCheckboxChange}
           handleSubmit={handleSubmit}
           roomImages={roomImages}
+          isCreating={isCreating}
         />
       )}
     </>

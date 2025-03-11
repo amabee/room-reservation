@@ -13,6 +13,7 @@ export function BookingForm({
   handleSubmit,
   setIsModalOpen,
   darkMode,
+  isCreating,
 }) {
   return (
     <div className="md:col-span-2">
@@ -193,8 +194,9 @@ export function BookingForm({
           <Button
             type="submit"
             className="bg-blue-600 hover:bg-blue-700 text-white"
+            disabled={isCreating}
           >
-            Submit Booking
+            {isCreating ? "Submitting..." : " Submit Booking"}
           </Button>
         </div>
       </form>

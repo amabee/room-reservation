@@ -24,6 +24,7 @@ export function BookingModal({
   handleCheckboxChange,
   handleSubmit,
   roomImages = {},
+  isCreating,
 }) {
   return (
     <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -56,6 +57,7 @@ export function BookingModal({
             handleSubmit={handleSubmit}
             setIsModalOpen={setIsModalOpen}
             darkMode={darkMode}
+            isCreating={isCreating}
           />
         </div>
       </DialogContent>

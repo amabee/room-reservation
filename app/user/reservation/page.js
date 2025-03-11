@@ -12,73 +12,31 @@ import {
   Trash2,
   Edit,
 } from "lucide-react";
-
-// Mock data for reservations
-const mockReservations = [
-  {
-    id: 1,
-    room: "Conference Room A",
-    date: "2025-02-24",
-    time: "09:00 AM",
-    duration: "1 hour",
-    status: "Confirmed",
-    attendees: 8,
-  },
-  {
-    id: 2,
-    room: "Meeting Room B",
-    date: "2025-02-25",
-    time: "02:00 PM",
-    duration: "2 hours",
-    status: "Pending",
-    attendees: 4,
-  },
-  {
-    id: 3,
-    room: "Board Room",
-    date: "2025-02-26",
-    time: "11:00 AM",
-    duration: "1.5 hours",
-    status: "Confirmed",
-    attendees: 12,
-  },
-  {
-    id: 4,
-    room: "Huddle Space",
-    date: "2025-02-27",
-    time: "10:30 AM",
-    duration: "30 minutes",
-    status: "Declined",
-    attendees: 3,
-  },
-  {
-    id: 5,
-    room: "Conference Room B",
-    date: "2025-02-28",
-    time: "03:00 PM",
-    duration: "1 hour",
-    status: "Confirmed",
-    attendees: 6,
-  },
-];
+import { fetchReservations } from "@/lib/user/reservations";
 
 export default function ReservationsPage() {
-  const [reservations, setReservations] = useState(mockReservations);
+  const [reservations, setReservations] = useState([]);
   const [notification, setNotification] = useState(null);
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isHoveredId, setIsHoveredId] = useState(null);
-  const [viewMode, setViewMode] = useState("list"); // "list" or "calendar"
+  const [viewMode, setViewMode] = useState("list");
 
-  // Show notification function
+  const fetchMyReservations = async () => {
+    const { success, message, data } = await fetchReservations();
+
+    if (!success) {
+      return setNotification({ message, error });
+    }
+  };
+
   const showNotification = (message, type = "success") => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
   };
 
-  // Filter reservations based on search query and status filter
   const filteredReservations = reservations.filter((reservation) => {
     const matchesSearch =
       reservation.room.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -88,12 +46,10 @@ export default function ReservationsPage() {
     return matchesSearch && matchesFilter;
   });
 
-  // Handle reservation selection
   const handleSelectReservation = (reservation) => {
     setSelectedReservation(reservation);
   };
 
-  // Handle reservation deletion
   const handleDeleteReservation = (id) => {
     setReservations(reservations.filter((res) => res.id !== id));
     if (selectedReservation && selectedReservation.id === id) {
@@ -102,7 +58,6 @@ export default function ReservationsPage() {
     showNotification("Reservation deleted successfully");
   };
 
-  // Get upcoming reservation (first in the list)
   const upcomingReservation = reservations.find(
     (res) =>
       res.status === "Confirmed" &&
@@ -111,57 +66,6 @@ export default function ReservationsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Dashboard Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 hover:shadow-md transition-shadow">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Total Reservations</p>
-                <p className="text-3xl font-bold text-blue-600">
-                  {reservations.length}
-                </p>
-              </div>
-              <div className="bg-blue-100 p-3 rounded-full">
-                <Calendar className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-green-50 to-teal-50 hover:shadow-md transition-shadow">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Confirmed</p>
-                <p className="text-3xl font-bold text-green-600">
-                  {reservations.filter((r) => r.status === "Confirmed").length}
-                </p>
-              </div>
-              <div className="bg-green-100 p-3 rounded-full">
-                <CheckCircle className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-yellow-50 to-amber-50 hover:shadow-md transition-shadow">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Pending</p>
-                <p className="text-3xl font-bold text-yellow-600">
-                  {reservations.filter((r) => r.status === "Pending").length}
-                </p>
-              </div>
-              <div className="bg-yellow-100 p-3 rounded-full">
-                <AlertCircle className="h-6 w-6 text-yellow-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Next Upcoming Reservation */}
       {upcomingReservation && (
         <Card className="bg-gradient-to-r from-indigo-100 to-purple-100 hover:shadow-md transition-shadow">
@@ -390,7 +294,7 @@ export default function ReservationsPage() {
               ))}
 
               {Array.from({ length: 35 }).map((_, index) => {
-                const day = index - 3; // Offset to start month on a Wednesday
+                const day = index - 3;
                 const hasReservation = filteredReservations.some((r) => {
                   const [year, month, date] = r.date.split("-");
                   return parseInt(date) === day;
