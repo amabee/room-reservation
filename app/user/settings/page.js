@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { Key } from "lucide-react";
+import { updateUserPassword } from "@/lib/user/accsettings";
 
 export default function ChangePasswordPage() {
   const [passwordData, setPasswordData] = useState({
@@ -18,15 +19,13 @@ export default function ChangePasswordPage() {
       ...passwordData,
       [name]: value,
     });
-    // Clear any previous error/success messages when user starts typing
     setPasswordError("");
     setSuccessMessage("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Basic validation
     if (
       !passwordData.currentPassword ||
       !passwordData.newPassword ||
@@ -46,11 +45,17 @@ export default function ChangePasswordPage() {
       return;
     }
 
-    // Here you would typically call an API to update the password
-    // For demo purposes, we'll just show a success message
+    const { success, message, data } = await updateUserPassword(
+      passwordData.currentPassword,
+      passwordData.confirmPassword
+    );
+
+    if (!success) {
+      return setSuccessMessage(message);
+    }
+
     setSuccessMessage("Password updated successfully!");
 
-    // Reset the form
     setPasswordData({
       currentPassword: "",
       newPassword: "",

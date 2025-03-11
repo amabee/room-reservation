@@ -143,10 +143,12 @@ export function RoomCard({
               ? "bg-blue-600 hover:bg-blue-700 text-white"
               : "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
           )}
-          disabled={room.status !== "Available"}
+          disabled={
+            room.status !== "Available" || room.has_pending_reservation === 1
+          }
           onClick={() => handleBookNow(room)}
         >
-          {room.status === "Available" ? "Book Now" : "Check Later"}
+        {room.has_pending_reservation === 1 ? "Pending Reservation" : (room.status === "Available" ? "Book Now" : "Check Later")}
         </Button>
       </CardContent>
     </Card>

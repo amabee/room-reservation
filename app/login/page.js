@@ -45,10 +45,18 @@ export default function LoginPage() {
         return alert(message);
       }
 
-      router.push("/");
-      router.refresh();
+      if (data.data?.user?.role === "admin") {
+        router.push("/admin/room");
+        router.refresh();
+        return;
+      }
 
-      alert("Success?");
+      if (data.data?.user?.role === "user") {
+        router.push("/user");
+        router.refresh();
+        return;
+      }
+
     } catch (error) {
       console.error("Login error:", error);
       setErrorMessage("An error occurred during login");

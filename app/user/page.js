@@ -37,6 +37,7 @@ export default function AvailableRoomsPage() {
     requesterName: "",
     serviceDivision: "",
     contactNumber: "",
+    has_pending_reservation: 0,
   });
   const getAllRooms = async () => {
     const { success, data, message } = await fetchRooms();
@@ -52,6 +53,8 @@ export default function AvailableRoomsPage() {
   useEffect(() => {
     getAllRooms();
   }, []);
+
+  console.log(rooms);
 
   const timeSlots = generateTimeSlots();
   const roomImages = {};
@@ -106,13 +109,6 @@ export default function AvailableRoomsPage() {
       bookingForm.endTime
     );
 
-    // console.log("Booking Form Data:", {
-    //   room: selectedRoom.room_id,
-    //   ...bookingForm,
-    //   startDateTime,
-    //   endDateTime,
-    // });
-
     setIsCreating(true);
 
     const { success, message, data } = await createReservation(
@@ -139,6 +135,7 @@ export default function AvailableRoomsPage() {
 
     setIsCreating(false);
     setIsModalOpen(false);
+    getAllRooms();
     setNotification({
       type: "success",
       message: `${selectedRoom.room_name} booked successfully!`,

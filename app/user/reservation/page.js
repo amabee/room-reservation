@@ -18,8 +18,9 @@ import {
   Building,
   ChevronLeft,
   ChevronRight,
+  Loader2,
 } from "lucide-react";
-import { fetchReservations } from "@/lib/user/reservations";
+import { deleteReservation, fetchReservations } from "@/lib/user/reservations";
 
 export default function ReservationsPage() {
   const [reservations, setReservations] = useState([]);
@@ -32,6 +33,7 @@ export default function ReservationsPage() {
   const [viewMode, setViewMode] = useState("list");
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [calendarDays, setCalendarDays] = useState([]);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchMyReservations = async () => {
     const { success, message, data } = await fetchReservations();
@@ -72,12 +74,20 @@ export default function ReservationsPage() {
     setSelectedReservation(reservation);
   };
 
-  const handleDeleteReservation = (id) => {
+  const handleDeleteReservation = async (id) => {
+    setIsDeleting(true);
+    const { success, message, data } = await deleteReservation(id);
+
+    if (!success) {
+      return showNotification(message, "error");
+    }
+
     setReservations(reservations.filter((res) => res.reservation_id !== id));
     if (selectedReservation && selectedReservation.reservation_id === id) {
       setSelectedReservation(null);
     }
     showNotification("Reservation deleted successfully");
+    setIsDeleting(false);
   };
 
   const upcomingReservation = reservations.find(
@@ -348,8 +358,13 @@ export default function ReservationsPage() {
                                   ? "opacity-100"
                                   : "opacity-0"
                               } transition-opacity`}
+                              disabled={isDeleting}
                             >
-                              <Trash2 className="h-4 w-4" />
+                              {isDeleting ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
                             </button>
                           </div>
                         </td>

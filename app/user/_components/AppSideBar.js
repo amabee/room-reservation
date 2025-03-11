@@ -18,12 +18,19 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { logout } from "@/lib/auth";
 
 const navItems = [
-  { href: "/user", title: "Dashboard", icon: Home },
+  { href: "/user", title: "Home", icon: Home },
   { href: "/user/reservation", title: "My Reservations", icon: Calendar },
   { href: "/user/settings", title: "Settings", icon: Settings },
 ];
+
+const handleLogOut = async () => {
+  await logout();
+
+  window.location.href = "/login";
+};
 
 export function AppSidebar({ sidebarOpen, setSidebarOpen, darkMode }) {
   return (
@@ -112,6 +119,7 @@ export function AppSidebar({ sidebarOpen, setSidebarOpen, darkMode }) {
                     ? "hover:bg-gray-800 text-gray-300 hover:text-white"
                     : "hover:bg-gray-100 text-gray-700 hover:text-gray-900"
                 )}
+                onClick={() => handleLogOut()}
               >
                 <LogOut className="h-5 w-5" />
                 <motion.span
