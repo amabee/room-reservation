@@ -106,7 +106,7 @@ export function BookingForm({
             />
           </div>
 
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label htmlFor="duration">Duration (hours)</Label>
             <Input
               id="duration"
@@ -119,7 +119,7 @@ export function BookingForm({
               className={darkMode ? "bg-gray-700 border-gray-600" : ""}
               required
             />
-          </div>
+          </div> */}
 
           <div className="space-y-2">
             <Label htmlFor="requesterName">Name of Requester</Label>
