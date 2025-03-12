@@ -31,11 +31,11 @@ export function RoomCard({
     >
       {/* Room image */}
       <div className="relative h-48 w-full overflow-hidden">
-        <Image
+        <img
           src={`${process.env.NEXT_PUBLIC_ROOT_URL}uploads/${room.room_image}`}
           alt={room.name}
           className="object-cover transition-all duration-200 hover:scale-110"
-          fill
+          fill="true"
         />
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
           <h3 className="font-semibold text-white text-lg">{room.name}</h3>
