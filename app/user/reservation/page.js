@@ -200,12 +200,15 @@ export default function ReservationsPage() {
   };
 
   const getContrastColor = (bgColor) => {
-    const hue = parseInt(bgColor.match(/hsl\((\d+)/)[1], 10);
+    try {
+      const match = bgColor.match(/hsl\((\d+)/);
+      if (!match || !match[1]) return "text-gray-800";
 
-    if (hue > 200 && hue < 280) {
-      return "text-white";
+      const hue = parseInt(match[1], 10);
+      return hue > 200 && hue < 280 ? "text-white" : "text-gray-800";
+    } catch (error) {
+      return "text-gray-800";
     }
-    return "text-gray-800";
   };
 
   return (
@@ -566,21 +569,22 @@ export default function ReservationsPage() {
                               );
                               const textColor = getContrastColor(bgColor);
 
+                              const widthAdjustment =
+                                visibleSpan > 3 ? (visibleSpan - 3) * 4 : 0;
+
                               return (
                                 <div
                                   key={multiDayEvent.reservation_id}
                                   className={`
-                              absolute text-md text-center font-medium p-1 mt-1 rounded-l truncate 
-                              border-l-4 ${getStatusColor(
-                                multiDayEvent.status
-                              )} 
-                              z-10 cursor-pointer shadow-md ${textColor}
-                              left-2 right-0 hover:opacity-90 hover:shadow-lg transition-all
-                            `}
+            absolute text-md text-center font-medium p-1 mt-1 rounded-l truncate 
+            border-l-4 ${getStatusColor(multiDayEvent.status)} 
+            z-10 cursor-pointer shadow-md ${textColor}
+            left-2 right-0 hover:opacity-90 hover:shadow-lg transition-all
+          `}
                                   style={{
-                                    width: `calc(${visibleSpan * 100}% + ${
-                                      (visibleSpan - 3) * 4
-                                    }px)`,
+                                    width: `calc(${
+                                      visibleSpan * 100
+                                    }% + ${widthAdjustment}px)`,
                                     top: `25px`,
                                     backgroundColor: bgColor,
                                   }}
@@ -634,6 +638,7 @@ export default function ReservationsPage() {
           </CardContent>
         </Card>
       )}
+
       {/* Reservation Details Panel */}
 
       {selectedReservation && (
