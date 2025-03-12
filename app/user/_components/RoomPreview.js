@@ -18,11 +18,11 @@ export function RoomPreview({
     <div className="md:col-span-1">
       <div className="rounded-md overflow-hidden">
         <div className="relative h-48 w-full">
-          <Image
+          <img
             src={`${process.env.NEXT_PUBLIC_ROOT_URL}uploads/${selectedRoom.room_image}`}
             alt={selectedRoom.name || "Room"}
             className="object-cover"
-            fill
+            fill="true"
           />
         </div>
       </div>
