@@ -22,7 +22,7 @@ import { logout } from "@/lib/auth";
 
 const navItems = [
   { href: "/user", title: "Home", icon: Home },
-  { href: "/user/reservation", title: "My Reservations", icon: Calendar },
+  { href: "/user/reservation", title: "Reservations", icon: Calendar },
   { href: "/user/settings", title: "Settings", icon: Settings },
 ];
 

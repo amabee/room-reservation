@@ -3,7 +3,7 @@ import React from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-export function Header({ darkMode }) {
+export function Header({ darkMode, name }) {
   return (
     <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8">
       <div>
@@ -13,7 +13,7 @@ export function Header({ darkMode }) {
             darkMode ? "text-white" : "text-gray-900"
           )}
         >
-          Welcome, John!
+          Welcome, User!
         </h1>
         <p
           className={cn(

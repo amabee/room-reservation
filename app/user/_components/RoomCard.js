@@ -63,8 +63,8 @@ export function RoomCard({
           <Badge
             className={
               room.status === "Available"
-                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 pointer-events-none"
+                : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300 pointer-events-none"
             }
           >
             {room.status}
@@ -74,7 +74,7 @@ export function RoomCard({
         <div className="flex items-center gap-1 mb-3">
           <MapPin
             className={cn(
-              "h-4 w-4",
+              "h-7 w-7",
               darkMode ? "text-gray-400" : "text-gray-500"
             )}
           />
@@ -124,7 +124,7 @@ export function RoomCard({
           </div>
         </div>
 
-        {room.status !== "Available" && (
+        {/* {room.status !== "Available" && (
           <div
             className={cn(
               "text-sm mb-3",
@@ -134,21 +134,23 @@ export function RoomCard({
             <span className="font-medium">Next Available:</span>{" "}
             {room.nextAvailable}
           </div>
-        )}
+        )} */}
 
         <Button
           className={cn(
             "w-full mt-2 transition-all hover:scale-105",
-            room.status === "Available"
-              ? "bg-blue-600 hover:bg-blue-700 text-white"
-              : "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+            "bg-blue-600 hover:bg-blue-700 text-white"
           )}
-          disabled={
-            room.status !== "Available" || room.has_pending_reservation === 1
-          }
+          disabled={room.has_pending_reservation === 1}
           onClick={() => handleBookNow(room)}
         >
-        {room.has_pending_reservation === 1 ? "Pending Reservation" : (room.status === "Available" ? "Book Now" : "Check Later")}
+          {/* {room.has_pending_reservation === 1
+            ? "Pending Reservation"
+            : room.status === "Available"
+            ? "Book Now"
+            : "Check Later"} */}
+
+            {room.has_pending_reservation === 1 ? "Pending Reservation" : "Book Now"}
         </Button>
       </CardContent>
     </Card>

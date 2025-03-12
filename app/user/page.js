@@ -127,6 +127,7 @@ export default function AvailableRoomsPage() {
 
     if (!success) {
       setIsCreating(false);
+      setIsModalOpen(false);
       return setNotification({
         type: "error",
         message: `Something went wrong reserving the room: ${message}`,

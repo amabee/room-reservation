@@ -19,6 +19,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  User,
 } from "lucide-react";
 import { deleteReservation, fetchReservations } from "@/lib/user/reservations";
 
@@ -90,12 +91,6 @@ export default function ReservationsPage() {
     setIsDeleting(false);
   };
 
-  const upcomingReservation = reservations.find(
-    (res) =>
-      res.status.toLowerCase() === "confirmed" &&
-      new Date(res.start_time) > new Date()
-  );
-
   const extractDate = (dateTimeString) => {
     return dateTimeString.split(" ")[0];
   };
@@ -149,7 +144,8 @@ export default function ReservationsPage() {
     const statusLower = status.toLowerCase();
     if (statusLower === "confirmed") return "border-green-500 bg-white";
     if (statusLower === "pending") return "border-yellow-500 bg-white";
-    return "border-red-500 bg-white";
+    if (statusLower === "complete") return "border-orange-500 bg-white";
+    return "";
   };
 
   const generateCalendarDays = (month) => {
@@ -178,6 +174,38 @@ export default function ReservationsPage() {
     }
 
     return days;
+  };
+
+  function getDaysBetweenDates(startDate, endDate) {
+    return Math.ceil(
+      (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)
+    );
+  }
+
+  function isDateInRange(date, startDate, endDate) {
+    const d = new Date(date);
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    return d >= start && d <= end;
+  }
+
+  const getEventColor = (title) => {
+    const hash = title.split("").reduce((acc, char) => {
+      return char.charCodeAt(0) + ((acc << 5) - acc);
+    }, 0);
+
+    const hue = hash % 360;
+    return `hsl(${hue}, 85%, 90%)`;
+  };
+
+  const getContrastColor = (bgColor) => {
+    const hue = parseInt(bgColor.match(/hsl\((\d+)/)[1], 10);
+
+    if (hue > 200 && hue < 280) {
+      return "text-white";
+    }
+    return "text-gray-800";
   };
 
   return (
@@ -385,111 +413,220 @@ export default function ReservationsPage() {
       )}
 
       {/* Calendar View (Simplified for this example) */}
+
       {viewMode === "calendar" && (
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
+        <Card className="hover:shadow-lg transition-shadow duration-300">
+          <CardHeader className="bg-gradient-to-r from-indigo-200 to-purple-200 border-b border-gray-200 p-4">
             <CardTitle className="flex justify-between items-center">
-              <span>Calendar View</span>
-              <div className="flex items-center space-x-2">
+              <span className="text-indigo-800 font-bold text-lg">
+                Calendar View
+              </span>
+              <div className="flex items-center space-x-3">
                 <button
-                  className="p-1 rounded-lg hover:bg-blue-100"
+                  className="p-2 rounded-full hover:bg-indigo-300/70 transition-colors duration-200"
                   onClick={() => {
                     const newDate = new Date(currentMonth);
                     newDate.setMonth(newDate.getMonth() - 1);
                     setCurrentMonth(newDate);
                   }}
                 >
-                  <ChevronLeft className="h-5 w-5 text-gray-600" />
+                  <ChevronLeft className="h-5 w-5 text-indigo-700" />
                 </button>
-                <span className="font-medium">
+                <span className="font-medium text-indigo-800 px-2">
                   {new Date(currentMonth).toLocaleString("default", {
                     month: "long",
                     year: "numeric",
                   })}
                 </span>
                 <button
-                  className="p-1 rounded-lg hover:bg-blue-100"
+                  className="p-2 rounded-full hover:bg-indigo-300/70 transition-colors duration-200"
                   onClick={() => {
                     const newDate = new Date(currentMonth);
                     newDate.setMonth(newDate.getMonth() + 1);
                     setCurrentMonth(newDate);
                   }}
                 >
-                  <ChevronRight className="h-5 w-5 text-gray-600" />
+                  <ChevronRight className="h-5 w-5 text-indigo-700" />
                 </button>
               </div>
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-4">
-            <div className="grid grid-cols-7 gap-1">
+          <CardContent className="p-6">
+            <div className="grid grid-cols-7 gap-2 relative">
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
                 <div
                   key={day}
-                  className="text-center font-medium p-2 text-gray-600"
+                  className="text-center font-semibold p-2 text-indigo-800 border-b border-indigo-100"
                 >
                   {day}
                 </div>
               ))}
 
               {calendarDays.map((date, index) => {
-                const formattedDate = date ? formatDate(date) : null;
-                const reservationsForDay = filteredReservations.filter(
-                  (r) => date && extractDate(r.start_time) === formattedDate
-                );
+                if (!date)
+                  return (
+                    <div
+                      key={index}
+                      className="bg-gray-50/70 rounded-lg p-2 h-28"
+                    ></div>
+                  );
+
+                const dayOfWeek = index % 7;
                 const isCurrentMonth =
-                  date && date.getMonth() === currentMonth.getMonth();
-                const isToday = date && isDateToday(date);
+                  date.getMonth() === currentMonth.getMonth();
+                const isToday = isDateToday(date);
+                const formattedDate = formatDate(date);
+
+                const hasEvents = filteredReservations.some(
+                  (r) =>
+                    isDateInRange(date, r.start_time, r.end_time) &&
+                    r.status !== "rejected"
+                );
+
+                const uniqueEvents = filteredReservations.filter((r) => {
+                  const isMultiDay =
+                    getDaysBetweenDates(r.start_time, r.end_time) > 1;
+
+                  if (isMultiDay) {
+                    return (
+                      extractDate(r.start_time) === formattedDate &&
+                      r.status !== "rejected"
+                    );
+                  }
+
+                  return (
+                    isDateInRange(date, r.start_time, r.end_time) &&
+                    r.status !== "rejected"
+                  );
+                });
+
+                const multiDayEvent = uniqueEvents.find(
+                  (r) =>
+                    getDaysBetweenDates(r.start_time, r.end_time) > 1 &&
+                    extractDate(r.start_time) === formattedDate
+                );
+
+                const singleDayEvents = uniqueEvents.filter(
+                  (r) => getDaysBetweenDates(r.start_time, r.end_time) === 1
+                );
 
                 return (
                   <div
                     key={index}
                     className={`
-                border rounded-lg p-2 h-24 overflow-auto ${
-                  !date || !isCurrentMonth
-                    ? "bg-gray-50 text-gray-400"
-                    : isToday
-                    ? "border-blue-400 bg-blue-50"
-                    : "hover:bg-blue-50 hover:border-blue-200"
-                } 
+                relative min-h-[130px] rounded-lg p-2 overflow-visible
                 ${
-                  reservationsForDay.length > 0 && isCurrentMonth
-                    ? "border-blue-200 bg-blue-50"
-                    : "border-gray-100"
+                  !isCurrentMonth
+                    ? "bg-gray-50/80 text-gray-400"
+                    : isToday
+                    ? "border-blue-500 bg-blue-50/70 shadow-md"
+                    : hasEvents && isCurrentMonth
+                    ? "border-indigo-300 bg-indigo-50/70 shadow-md"
+                    : "hover:bg-blue-50/50 hover:border-blue-200"
                 }
+                ${
+                  hasEvents && isCurrentMonth
+                    ? "border-l-4 border-l-indigo-500 border-t border-r border-b"
+                    : isToday
+                    ? "border-2 border-blue-400"
+                    : "border border-gray-200"
+                }
+                transition-all duration-200 ease-in-out
               `}
                   >
                     <div
                       className={`text-right font-medium ${
-                        isToday ? "text-blue-600" : ""
+                        isToday
+                          ? "text-blue-600 font-bold"
+                          : hasEvents && isCurrentMonth
+                          ? "text-indigo-700"
+                          : ""
                       }`}
                     >
-                      {date ? date.getDate() : ""}
+                      {date.getDate()}
                     </div>
-                    {date &&
-                      isCurrentMonth &&
-                      reservationsForDay.length > 0 && (
-                        <div className="mt-1">
-                          {reservationsForDay.slice(0, 3).map((r) => (
-                            <div
-                              key={r.reservation_id}
-                              className={`text-xs p-1 mt-1 rounded truncate border-l-4 ${getStatusColor(
-                                r.status
-                              )}`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleSelectReservation(r);
-                              }}
-                            >
-                              {extractTime(r.start_time)} - {r.title}
-                            </div>
-                          ))}
-                          {reservationsForDay.length > 3 && (
-                            <div className="text-xs p-1 mt-1 text-center text-gray-500">
-                              +{reservationsForDay.length - 3} more
-                            </div>
-                          )}
+
+                    {isCurrentMonth && (
+                      <div className="mt-1">
+                        {multiDayEvent && (
+                          <div>
+                            {(() => {
+                              const durationDays = getDaysBetweenDates(
+                                multiDayEvent.start_time,
+                                multiDayEvent.end_time
+                              );
+                              const daysUntilEndOfWeek = 7 - dayOfWeek;
+                              const visibleSpan = Math.min(
+                                daysUntilEndOfWeek,
+                                durationDays
+                              );
+
+                              const bgColor = getEventColor(
+                                multiDayEvent.title
+                              );
+                              const textColor = getContrastColor(bgColor);
+
+                              return (
+                                <div
+                                  key={multiDayEvent.reservation_id}
+                                  className={`
+                              absolute text-md text-center font-medium p-1 mt-1 rounded-l truncate 
+                              border-l-4 ${getStatusColor(
+                                multiDayEvent.status
+                              )} 
+                              z-10 cursor-pointer shadow-md ${textColor}
+                              left-2 right-0 hover:opacity-90 hover:shadow-lg transition-all
+                            `}
+                                  style={{
+                                    width: `calc(${visibleSpan * 100}% + ${
+                                      (visibleSpan - 3) * 4
+                                    }px)`,
+                                    top: `25px`,
+                                    backgroundColor: bgColor,
+                                  }}
+                                  onClick={() =>
+                                    handleSelectReservation(multiDayEvent)
+                                  }
+                                >
+                                  {multiDayEvent.title} ({durationDays}d)
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        )}
+                        <div className="mt-16">
+                          {singleDayEvents.slice(0, 2).map((r) => {
+                            const bgColor = getEventColor(r.title);
+                            const textColor = getContrastColor(bgColor);
+
+                            return (
+                              <div
+                                key={r.reservation_id}
+                                className={`
+                            text-xs font-medium p-1 mt-1 rounded truncate 
+                            border-l-4 ${getStatusColor(
+                              r.status
+                            )} cursor-pointer
+                            shadow-md ${textColor} hover:shadow-lg hover:opacity-90 transition-all
+                          `}
+                                style={{
+                                  backgroundColor: bgColor,
+                                }}
+                                onClick={() => handleSelectReservation(r)}
+                              >
+                                {extractTime(r.start_time)} - {r.title}
+                              </div>
+                            );
+                          })}
                         </div>
-                      )}
+
+                        {singleDayEvents.length > 2 && (
+                          <div className="text-xs p-1 mt-1 text-center font-medium bg-gray-100 rounded-full text-gray-700 hover:bg-gray-200 transition-colors cursor-pointer shadow-sm">
+                            +{singleDayEvents.length - 2} more
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -498,6 +635,7 @@ export default function ReservationsPage() {
         </Card>
       )}
       {/* Reservation Details Panel */}
+
       {selectedReservation && (
         <Card className="bg-gradient-to-br from-gray-50 to-blue-50 hover:shadow-md transition-shadow">
           <CardHeader className="border-b border-gray-100">
@@ -562,7 +700,7 @@ export default function ReservationsPage() {
                       </div>
                       <div className="flex items-center text-sm">
                         <Mail className="h-4 w-4 mr-2 text-gray-500" />
-                        <span>{selectedReservation.email}</span>
+                        <span>{selectedReservation.reserved_by_email}</span>
                       </div>
                       {selectedReservation.contact_number && (
                         <div className="flex items-center text-sm">
@@ -575,6 +713,14 @@ export default function ReservationsPage() {
                           Division: {selectedReservation.serviceDivisionUnit}
                         </span>
                       </div>
+                      {selectedReservation.actioned_by_name && (
+                        <div className="flex items-center text-sm">
+                          <User className="h-4 w-4 mr-2 text-gray-500" />
+                          <span>
+                            Actioned by: {selectedReservation.actioned_by_name}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="mt-4">
