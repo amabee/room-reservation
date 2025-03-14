@@ -486,38 +486,45 @@ export default function ReservationsPage() {
                     r.status !== "rejected"
                 );
 
-                const uniqueEvents = filteredReservations.filter((r) => {
-                  const isMultiDay =
-                    getDaysBetweenDates(r.start_time, r.end_time) > 1;
-
-                  if (isMultiDay) {
-                    return (
-                      extractDate(r.start_time) === formattedDate &&
-                      r.status !== "rejected"
-                    );
-                  }
-
+                // Get all events for this date
+                const dateEvents = filteredReservations.filter((r) => {
                   return (
                     isDateInRange(date, r.start_time, r.end_time) &&
                     r.status !== "rejected"
                   );
                 });
 
-                const multiDayEvent = uniqueEvents.find(
-                  (r) =>
-                    getDaysBetweenDates(r.start_time, r.end_time) > 1 &&
-                    extractDate(r.start_time) === formattedDate
+                // Separate multi-day and single-day events
+                const multiDayEvents = dateEvents.filter(
+                  (r) => getDaysBetweenDates(r.start_time, r.end_time) > 1
                 );
 
-                const singleDayEvents = uniqueEvents.filter(
+                const singleDayEvents = dateEvents.filter(
                   (r) => getDaysBetweenDates(r.start_time, r.end_time) === 1
+                );
+
+                // Sort events by start time
+                singleDayEvents.sort(
+                  (a, b) => new Date(a.start_time) - new Date(b.start_time)
+                );
+
+                // Only show multi-day events that start on this date
+                const newMultiDayEvents = multiDayEvents.filter(
+                  (r) => extractDate(r.start_time) === formattedDate
+                );
+
+                // Calculate offset for continuing multi-day events
+                const continuingMultiDayEvents = multiDayEvents.filter(
+                  (r) =>
+                    extractDate(r.start_time) !== formattedDate &&
+                    isDateInRange(date, r.start_time, r.end_time)
                 );
 
                 return (
                   <div
                     key={index}
                     className={`
-                relative min-h-[130px] rounded-lg p-2 overflow-visible
+                relative min-h-[150px] rounded-lg p-2
                 ${
                   !isCurrentMonth
                     ? "bg-gray-50/80 text-gray-400"
@@ -551,84 +558,118 @@ export default function ReservationsPage() {
 
                     {isCurrentMonth && (
                       <div className="mt-1">
-                        {multiDayEvent && (
-                          <div>
-                            {(() => {
-                              const durationDays = getDaysBetweenDates(
-                                multiDayEvent.start_time,
-                                multiDayEvent.end_time
-                              );
-                              const daysUntilEndOfWeek = 7 - dayOfWeek;
-                              const visibleSpan = Math.min(
-                                daysUntilEndOfWeek,
-                                durationDays
-                              );
+                        {/* Multi-day events that start on this date */}
+                        {newMultiDayEvents.map((multiDayEvent, idx) => {
+                          const durationDays = getDaysBetweenDates(
+                            multiDayEvent.start_time,
+                            multiDayEvent.end_time
+                          );
+                          const daysUntilEndOfWeek = 7 - dayOfWeek;
+                          const visibleSpan = Math.min(
+                            daysUntilEndOfWeek,
+                            durationDays
+                          );
 
-                              const bgColor = getEventColor(
-                                multiDayEvent.title
-                              );
-                              const textColor = getContrastColor(bgColor);
+                          const bgColor = getEventColor(multiDayEvent.title);
+                          const textColor = getContrastColor(bgColor);
 
-                              const widthAdjustment =
-                                visibleSpan > 3 ? (visibleSpan - 3) * 4 : 0;
+                          const topPosition = 25 + idx * 22;
 
-                              return (
-                                <div
-                                  key={multiDayEvent.reservation_id}
-                                  className={`
-            absolute text-md text-center font-medium p-1 mt-1 rounded-l truncate 
-            border-l-4 ${getStatusColor(multiDayEvent.status)} 
-            z-10 cursor-pointer shadow-md ${textColor}
-            left-2 right-0 hover:opacity-90 hover:shadow-lg transition-all
-          `}
-                                  style={{
-                                    width: `calc(${
-                                      visibleSpan * 100
-                                    }% + ${widthAdjustment}px)`,
-                                    top: `25px`,
-                                    backgroundColor: bgColor,
-                                  }}
-                                  onClick={() =>
-                                    handleSelectReservation(multiDayEvent)
-                                  }
-                                >
-                                  {multiDayEvent.title} ({durationDays}d)
-                                </div>
-                              );
-                            })()}
-                          </div>
-                        )}
-                        <div className="mt-16">
-                          {singleDayEvents.slice(0, 2).map((r) => {
-                            const bgColor = getEventColor(r.title);
+                          return (
+                            <div
+                              key={multiDayEvent.reservation_id}
+                              className={`
+                          absolute text-xs text-center font-medium p-1 rounded-l truncate 
+                          border-l-4 ${getStatusColor(multiDayEvent.status)} 
+                          z-10 cursor-pointer shadow-sm ${textColor}
+                          left-2 right-0 hover:opacity-90 hover:shadow transition-all
+                        `}
+                              style={{
+                                width: `calc(${visibleSpan * 100}% - 8px)`,
+                                top: `${topPosition}px`,
+                                backgroundColor: bgColor,
+                              }}
+                              onClick={() =>
+                                handleSelectReservation(multiDayEvent)
+                              }
+                            >
+                              {multiDayEvent.title} ({durationDays}d)
+                            </div>
+                          );
+                        })}
+
+                        {/* Continuing multi-day events */}
+                        {continuingMultiDayEvents.map((contEvent, idx) => {
+                          const bgColor = getEventColor(contEvent.title);
+                          const textColor = getContrastColor(bgColor);
+
+                          // Position below any new multi-day events
+                          const topPosition =
+                            25 + (newMultiDayEvents.length + idx) * 22;
+
+                          return (
+                            <div
+                              key={`cont-${contEvent.reservation_id}`}
+                              className={`
+                          absolute text-sm text-center font-medium p-1 truncate mt-2
+                          border-l-4 ${getStatusColor(contEvent.status)} 
+                          z-10 cursor-pointer shadow-sm ${textColor}
+                          left-0 right-0 hover:opacity-90 hover:shadow transition-all
+                        `}
+                              style={{
+                                top: `${topPosition}px`,
+                                backgroundColor: bgColor,
+                              }}
+                              onClick={() => handleSelectReservation(contEvent)}
+                            >
+                              {contEvent.title}
+                            </div>
+                          );
+                        })}
+
+                        {/* Single day events - positioned below multi-day events */}
+                        <div
+                          className="flex flex-col space-y-1"
+                          style={{
+                            marginTop: `${
+                              (newMultiDayEvents.length +
+                                continuingMultiDayEvents.length) *
+                                22 +
+                              24
+                            }px`,
+                          }}
+                        >
+                          {singleDayEvents.slice(0, 3).map((event, idx) => {
+                            const bgColor = getEventColor(event.title);
                             const textColor = getContrastColor(bgColor);
 
                             return (
                               <div
-                                key={r.reservation_id}
+                                key={event.reservation_id}
                                 className={`
-                            text-xs font-medium p-1 mt-1 rounded truncate 
+                            text-xs font-medium p-1 rounded truncate 
                             border-l-4 ${getStatusColor(
-                              r.status
+                              event.status
                             )} cursor-pointer
-                            shadow-md ${textColor} hover:shadow-lg hover:opacity-90 transition-all
+                            shadow-sm ${textColor} hover:shadow hover:opacity-90 transition-all
                           `}
                                 style={{
                                   backgroundColor: bgColor,
                                 }}
-                                onClick={() => handleSelectReservation(r)}
+                                onClick={() => handleSelectReservation(event)}
                               >
-                                {extractTime(r.start_time)} - {r.title}
+                                {extractTime(event.start_time)} - {event.title}
                               </div>
                             );
                           })}
-                        </div>
 
-                        {singleDayEvents.length > 2 && (
-                          <div className="text-xs p-1 mt-1 text-center font-medium bg-gray-100 rounded-full text-gray-700 hover:bg-gray-200 transition-colors cursor-pointer shadow-sm">
-                            +{singleDayEvents.length - 2} more
-                          </div>
-                        )}
+                          {/* "More" indicator if we have more than 3 events */}
+                          {singleDayEvents.length > 3 && (
+                            <div className="text-xs p-1 text-center font-medium bg-gray-100 rounded-full text-gray-700 hover:bg-gray-200 transition-colors cursor-pointer shadow-sm">
+                              +{singleDayEvents.length - 3} more
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
